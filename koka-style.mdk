@@ -1,0 +1,316 @@
+.sf {
+  .sans-serif
+}
+
+iddash         : -
+@tex iddash    : []{tex-cmd:"\dash"}
+
+.codesub {
+  font-style:normal;
+  tex-cmd:"\mbox";
+}
+
+total     : &lang;&rang;
+@tex total: &lang; &rang;
+
+.code1,.pre-indented,.pre-fenced3 {
+  language: kokax;
+}
+
+.code1 {
+  replace:"/^:/\(:|\)/";
+  replace:"/^([A-Z])$/\(\/\/\1|\1\)/";
+}
+
+.emit {
+  background-color: #ddd;
+}
+
+.koka {
+  language: kokax;
+  xreplace:"/([a-qszA-QS-Z])([12])\b/\1\(x|~\2~\)/g";
+  replace: "//=>/\(=>|[&rArr;]{.serif}\)\
+            //->/->\
+            //--/-\([{}]{.texraw}\)-\
+            //~>/\(xx|$\rightsquigarrow$\)\
+            //<>/\(<>|&total;\)\
+            //\blt\b/<\
+            //\bgt\b/>\
+            //>>=/>>=\
+            //_s\b/\(x|~[s]{.codesub}~\)\
+            //\btau\b/\(t|[&tau;]{.serif}\)\
+            //(\w)@(ru?\d?)\b/\1\([@\2]{.emit}\)\
+            //@([-\w]+(?:\([^\)]*\))?)/\([\1]{.emit}\)\
+            //@\{([^\}]+)\}/\([\1]{.emit}\)\
+            //gm";
+}
+
+
+@if tex {
+  pre { tex-cmd-outer:"{\def~{\nobreakspace{}}"; }
+  .pre-fenced4 { font-size:small }
+  xpre,.xcode2 { font-size:small }
+  .xpre-indented,.xpre-fenced {
+    margin-top:0.25ex;
+    margin-bottom:0.25ex;
+  }
+}
+
+.math-inline {
+  input: mathpre;
+}
+
+mathpre {
+  .mathpre;
+}
+
+<!-- xreplace:"//(\n)\s*\{(.*)\}\s*/\1\multispan{7}{\strut\ensuremath{\{ {\2} \}\hfill}}\1"; -->
+
+
+.math-inline, .mathpre {
+  replace: "//%%(.*)(\n|$)/& \; \{ raw(\1)rawend \}\2\
+            //%(.*)(\n|$)/& \; \{ \1 \}\2\
+            //g";
+
+  replace:"/(\n)\s*\\\{(.*)\\\}/&\quad \{{\2}\}/g";
+  xreplace:"/(\n)([^\{\w][^\s]*)\s+\{(?!\{)(.*)\}\s*/\1\quad \2 \{{raw(\3)endraw}\}\1/g";
+
+  replace:"//raw\((.*)\)rawend/\1\
+           //(\n)\s*\{(?![\{\\])(.*)\}\s*/&\quad \{{\2}\}\1\
+           //_fk/_{f,k}\
+           //^\[([\w\!]+)\]$/\rulename{#\1}\
+           //^\[(\w+)\-(\w+)\]$/\rulename{#\1-#\2}\
+           //\s*<-\s*@dropru/\!\leftarrow\!@dropru\
+           //\\rc/\rc\
+           //\|\-F\b/\!\vdash_{\textsf{F}}\
+           //\|\-r/\!\Vdash\
+           //\|\-([a-zA-Z]+)/\!\vdash_{\!\textsf{\textup{\textsc{\1}}}}\
+           //\|\|\-([a-zA-Z]+)/\!\Vdash_{\!\textsf{\1}}\
+           //\bxevv(?![a-zA-Z\-])/{\scriptstyle\Delta}\
+           //\bevv(?![a-zA-Z\-])/w\
+           //\bG([0-9ni])/\Gamma_{\1}\
+           //\bD([0-9ni])/\Delta_{\1}\
+           //\b([exp])([0-9ni])/\mathid{\1}_{\2}\
+           //\beff([0-9])/\epsilon_{\1}\
+           //\.\.\./{\dots}\
+           // \. /\cdot{}\
+           //\bnil(?![a-zA-Z])/\cdot{}\
+           // oo /\bigcdot{}\
+           // o /\circ{}\
+           //00/\varnothing{}\
+           //\(\*\)/(\star)\
+           // @ /\;\hat{}\;\
+           // =<< /\mathbin{\lhd}\
+           // >>= /\mathbin{\rhd}\
+           //\[\[/{\llbracket}\
+           //\]\]/{\rrbracket}\
+           //!-->>/{\longmapsto^{\!*}}\
+           //!-->/{\longmapsto}\
+           //<<--!/{^*\!{\rlongmapsto}}\
+           //<--!/{\rlongmapsto}\
+           //-->>r/{\longrightarrow_{\textsf{r}}^*}\
+           //-->r/{\longrightarrow_{\textsf{r}}}\
+           //-->>/{\longrightarrow^*}\
+           //<<--/{^*\!{\longleftarrow}}\
+           //-->/{\longrightarrow}\
+           //<--/{\longleftarrow}\
+           //!->/{\,\mapsto}\
+           //\+\+/{+\!\!+}\
+           //\[->\]/[->]\
+           //->/{\rightarrow}\
+           //<-/{\leftarrow}\
+           //~>/{\;\rightsquigarrow\;}\
+           //~~>/{\;\hookrightarrow}\;\
+           //===/{\equiv}\
+           //!==/{\not\equiv}\
+           //~==/{\,\cong\,}\
+           //!~=/{\,\not\equiv\,}\
+           //\^=/{\,\hat{=}\,}\
+           //\.=/\doteq{}\
+           //!=/{\not\eq}\
+           //\[=/\sqsubseteq{}\
+           //=b(?![a-zA-Z])/=_{\beta}\
+           //\bxexpr(?![a-zA-Z])(_?['\d]?)/\wreduce{e\1}\
+           //\bx-->/{\longrightarrow_t}\
+           //\b([vwb])s(?![a-zA-Z0-9])/\overline{\1}\
+           //\b([vwb])s([0-9i])(?![a-zA-Z0-9])/\overline{\1_{\2}}\
+           //\b([vwdpg])s(?![a-zA-Z0-9])/{{\1s}}\
+           //\b([wdpg])s([0-9])/{{\1s_{\2}}}\
+           //@as(?![a-zA-Z])/\mathsf{as}\
+           //\bas(?![a-zA-Z])/\overline{\alpha}\
+           //\bVS(?![a-zA-Z])/\overline{\textsf{V}}\
+           //\braw\(([a-zA-Z]+)\)/\1\
+           //\ba(?![a-zA-Z\}])/\alpha{}\
+           //\bbb(?![a-zA-Z])/\beta{}\
+           //\bts(?![a-zA-Z])/\overline{\tau}\
+           //\bss(?![a-zA-Z])/{\overline\sigma}\
+           //\bll([0-9])/@hnd^l_{\1}\
+           //\bll(?![a-zA-Z])/@hnd^l\
+           //\bgg(?![a-zA-Z])/\gamma{}\
+           //\bG(?![a-zA-Z])/\Gamma{}\
+           //\bGG\b/{G}\
+           //\bNN\b/\mathbb{N}\
+           //\bZZ\b/\mathbb{Z}\
+           //\bel(?![a-zA-Z])/{\iota}\
+           //\brl(?![a-zA-Z])/\mathrm{l}\
+           //\bpe(?![a-zA-Z])/{\pi}\
+           //\beff(?![a-zA-Z])/{\epsilon}\
+           //\bnu(?![a-zA-Z])/\upsilon{}\
+           //\bpr(?![a-zA-Z])/{\pi}\
+           //\bprs(?![a-zA-Z])/\overline{\pi}\
+           //\bexpr(?![a-zA-Z])/e\
+           //\bsub(?![a-zA-Z])/\theta{}\
+           //\bevnone/\bot{}\
+           //\bls\b/\overline{l}\
+           //\bargs(?![a-zA-Z])/\overline{x}\
+           //\bkl(?![a-zA-Z])/\mathsf{lab}\
+           //\bke(?![a-zA-Z])/\mathsf{eff}\
+           //\bk([lkeuh])(?![a-zA-Z])/\mathsf{\1}\
+           //\|\-/\!\!\vdash\!{}\
+           //\|==/\vDash{}_{\!\!\bot}\
+           //\|=/\vDash{}\
+           //\|\|-/\Vdash{}\
+           //\-\|/\dashv{}\
+           //\|/\midbar{}\
+           // \| /\midbar{}\
+           //:=/\coloneq{}\
+           //:/\xcolon{}\
+           //>>=/>>=\
+           //>=/\geqslant{}\
+           //<=/\leqslant{}\
+           //<<</\llangle{}\
+           //>>>/\rrangle{}\
+           //<>/\total{}\
+           //\.([ij]\d?)\s*>>/\smallat{\1}\mkern2#mu\rangle{}\
+           //<<(?!-)/\langle\mkern1#mu{}\
+           //>>/\mkern2#mu\rangle{}\
+           //=>/\!\!\Rightarrow{}\!\
+           //~~>/\rightsquigarrow{}\
+           //\br([kfxye])(?![a-zA-Z])/\mathsf{\1}\
+           //\+\+/\appendop{}\
+           //\bvv\b/\downarrow{}\
+           //\bVV\b/\Downarrow{}\
+          //g";
+}
+
+.math-inline,pre {
+  replace:"/\b(?!tex)([a-zA-Z])-(?!handle)([a-zA-Z])/\1\(-|&iddash;\)\2/g"
+}
+
+Css Header:
+    p{ line-height: 1.25 }
+
+Css Header Indented:
+    p{ margin: 0pt; }
+    p.indent { text-indent: 1.5em; }
+
+Tex Header:
+    %\setlist[itemize]{align=parleft,left=0pt..1em}
+    %\setlist[enumerate]{align=parleft,left=0pt..1em}
+    \newlength\mdxwidth
+    \newcommand\ifnowidth[3]{%
+       \settowidth{\mdxwidth}{#1}%
+       \ifdim\mdxwidth>0pt\relax#3\else#2\fi
+    }
+    \newcommand{\rulename}[1]{\mbox{\textrm{\textsc{\small #1}}}}
+    \newcommand{\infer}[3]{\dfrac{\begin{array}{llll}#1\end{array}}{\begin{array}{llll}#2\end{array}}\ifnowidth{#3}{}{\;\rulename{#3}}}
+    % https://tex.stackexchange.com/questions/56003/fraction-with-doubled-line
+    \newlength{\doublefracgap}
+    \setlength{\doublefracgap}{0.75pt}
+    \newcommand{\ddoublefrac}[2]{%
+      \ooalign{%
+        \raisebox{\doublefracgap}{$\frac{#1}{\phantom{#2}}$}\cr%
+        \raisebox{-\doublefracgap}{$\frac{\phantom{#1}}{#2}$}\cr%
+      }%
+    }
+    \newcommand{\dinfer}[3]{\ddoublefrac{\begin{array}{llll}#1\end{array}}{\begin{array}{llll}#2\end{array}}\ifnowidth{#3}{}{\;\rulename{#3}}}
+    \newcommand{\lam}[3]{\lambda^{#1} #2.\,#3}
+    \newcommand{\Lam}[2]{\Lambda #1.\,#2}
+    \newcommand{\comp}[1]{\overline{#1}}
+    \newcommand{\bind}[4]{\mathsf{bind}_{#1}(#2,#3,#4)}
+    \newcommand{\apply}[2]{\mathsf{apply}_{#1}(#2)}
+    \newcommand{\rlam}[1]{\lambda\kern -0.95ex\lambda_{#1}}
+    \newcommand\llangle{\langle\kern -0.45ex\langle\kern 0.15ex}
+    \newcommand\rrangle{\kern 0.15ex\rangle\kern -0.55ex\rangle}
+    \newcommand\dash{\hspace{-0.45ex}\mbox{-}\hspace{-0.5ex}}
+    \newcommand\xlongmapsto{\longmapsto^*}%\hspace{-2.8ex}\rightarrow\;}
+    \newcommand\rlongmapsto{\longleftarrow\hspace{-0.8ex}\rule[0.1ex]{0.14ex}{1ex}}
+    \renewcommand\mathspace{\mskip 3mu plus 0.5mu minus 0.5mu\smallstrut}
+    \newcommand\disjoint{\not\strut\hspace{-1.1ex}\cap\;}%
+    \newcommand\cnot[1]{\mathrel{\ooalign{\hfil$#1$\hfil\cr\hfil$/$\hfil\cr}}}
+    \newcommand\itcorrect[1]{#1\hspace{0.15ex}}
+    \appto\langle{\mkern-2mu}
+    \preto\rangle{\mkern-1mu}
+    \newcommand\total{\langle\mkern 3mu\rangle}
+    \newcommand\bigline{\rule[-1.4ex]{0pt}{4ex}}
+    \newcommand\reduce[1]{\overline{#1}}
+    \newcommand\wreduce[1]{\reduce{#1}}
+    \renewcommand\notin{\!\not\strut\!\!\!\in}
+    \newcommand\llambda{\lambda\hspace{-1ex}\lambda}
+    \newcommand\calls[1]{|#1|}
+    \DeclareSymbolFont{modernmath}{OML}{ptm}{m}{n}
+    \DeclareMathSymbol{\mlambda}{\mathord}{modernmath}{"15}
+    \newcommand{\evec}[1]{\llangle #1\rrangle}
+    \newcommand{\kwevv}{\mathkw{evv}}
+    \newcommand{\tup}[2]{\llparenthesis#1,#2\rrparenthesis}
+    \newcommand{\vvdash}[1]{\!\Vdash_{\!\textsf{#1}}}
+    \newcommand{\ins}[3]{\evec{#1\xcolon #2 \midbar #3}}
+    \newcommand{\midbar}{\mid}
+    \newcommand{\mbag}[1]{\{\!\!\{ {#1} \}\!\!\}}
+    \DeclareMathSymbol{:}{\mathord}{operators}{"3A}
+    \newcommand{\xcolon}{\,:\,}
+    \renewcommand{\coloneq}{:{=}\ignorespaces}
+    \makeatletter
+    \newcommand*\bigcdot{\mathpalette\bigcdot@{.85}}
+    \newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+    \newcommand\len[1]{|#1|}
+    \makeatother
+
+Tex Header*:
+    %\renewcommand\mathit[1]{\textit{\fontfamily{lmr}\selectfont #1}}
+    \newlength\mdpreopwidth
+    \renewcommand{\ppreop}[1]{%
+      \settowidth{\mdpreopwidth}{#1}%
+      \ifdim\mdpreopwidth=0pt\relax\else\,{#1}\,\fi%
+    }
+    \setlength\mdpreskip{\mdcompactskip}
+    \newlength\preht
+    \setlength\preht{0.28em}
+    \newlength\preadjust
+    \setlength\preadjust{-0.25em}
+    \newcommand\prestrut{\rule[-.3\preht]{0pt}{\preht}}
+    \renewcommand\prebr{\vspace*{\preadjust}\newline\ignorespaces\prestrut\ignorespaces}
+
+@Tight Tex Header*:
+    \setlength\mdcompactskip{-2ex}
+    %\setlength\mdpreskip{-2ex}
+    \setlength\preht{0.25em}
+    \newlength\preadjust
+    \setlength\preadjust{-0.5em}
+
+
+
+infer {
+  .align-center;
+  display:block;
+  replace:"/\/\/ *(.*)/&\\;\\text{(\1)}/g";
+  replace:"/([\s\S]*?)\n *----+ *(?:\[([^\]]*)\])? *\n([\s\S]*)/\\infer{\1}{\3}{\textsc{\2}}/m";
+  replace:"$&nl;&source;&nl;${.infereq; display:inline-block;}";
+}
+
+dinfer {
+  .align-center;
+  display:block;
+  replace:"/\/\/ *(.*)/&\\;\\text{(\1)}/g";
+  replace:"/([\s\S]*?)\n *----+ *(?:\[([^\]]*)\])? *\n([\s\S]*)/\\dinfer{\1}{\3}{\textsc{\2}}/m";
+  replace:"$&nl;&source;&nl;${.infereq; display:inline-block;}";
+}
+
+@tex .token.identifier { tex-cmd-inner:"\itcorrect"; }
+
+.token.keyword    { color:#00C; }
+.token.type       { color:#066; }
+.token.predefined { color:#505; }
+.token.string     { color: #505; }
+.token.comment    { color:#050; }
+.xtoken.constructor  { color:#464; }

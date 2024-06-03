@@ -1,0 +1,204 @@
+[INCLUDE=style/acmart]
+
+Extended    : False
+
+Anon        : False
+TechReport  : True
+Logo        : False
+Submit      : False
+Todo        : True
+Tight       : False
+
+Title       : Frank Pfenning: Adjoint Functional Programming
+TechNR      :
+
+Short Title : &Title;
+
+Author      : Anton Lorenzen
+Affiliation : School of Informatics, University of Edinburgh, UK
+Email       : anton.lorenzen@ed.ac.uk
+
+Keywords    : FIP, FBIP, Perceus, Reference Counting, Lean
+
+ISBN            :
+DOI             :
+
+Acm Copyright   : rightsretained
+Acm Copyright   : none
+Acm Journal     : PACMPL
+Acm Number      : OOPSLA
+Acm Article     : 40
+Acm Month       : 1
+Acm Volume      : 7
+Acm Format      : acmsmall,screen
+@anon Acm Format: acmsmall,review,anonymous,nonacm
+Acm SubmissionID: popl23main-p271-p
+Acm Received    : 2022-07-07
+Acm Received Accepted: 2022-11-07
+
+Bibliography    : daan2022.bib
+Math Dpi        : 300
+Math Concurrency: 8
+xPackage         : trfrac
+Package         : graphicx
+Embed           : 1000
+
+Tex Header:
+    \usepackage{pdflscape}
+
+
+prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
+
+.supplement {
+  replace: "&source;"
+}
+
+.tronly {
+  display:none;
+}
+
+@techreport .tronly {
+  display:block;
+}
+
+@submit .supplement {
+  replace: clear;
+  replace: "&source; in the tech report"
+}
+
+.intro1 {
+  display: none;
+}
+
+[INCLUDE=borrowing-style]
+[INCLUDE=koka-style]
+[INCLUDE=graphdefs]
+[INCLUDE=graphlegend]
+
+
+~ HtmlOnly
+[TITLE]
+
+[TOC]
+~
+
+~TexRaw
+\author{Anton Lorenzen}
+\affiliation{
+  \institution{University of Edinburgh}
+  \city{Edinburgh}
+  \country{UK}
+}
+\email{anton.lorenzen@ed.ac.uk}
+
+\title{\mdtitle}
+\maketitle
+\def\shorttitle{\acmshorttitle}
+~
+
+~ tronly
+~~ texraw
+\makeatletter
+\fancypagestyle{firstpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\fancypagestyle{standardpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\makeatother
+\pagestyle{standardpagestyle}
+~~
+~
+
+~ MathDefs
+\newcommand{\gray}[1]{\colorbox{gainsboro}{\strut$#1$}}
+\newcommand{\tr}[1]{\lfloor #1\rfloor}
+\newcommand{\comm}{\mathbin{\triangleright}}
+\newcommand\rc[3]{#1 \mapsto^{#2}\! #3}
+\newcommand\st[3]{#1 \mapsto\! #3}
+\newcommand\fold[1]{(\mkern-3.5mu|#1|\mkern-3mu)}
+
+\newcommand\under[2]{\underset{\raisebox{2mm}{$\scriptstyle #2$}}{#1}}
+\newcommand\inhx[2]{\under{#1}{\under{\uparrow}{#2}}}
+\newcommand\synx[2]{\under{#1}{\under{\downarrow}{#2}}}
+\newcommand\inh[1]{\under{#1}{\uparrow}}
+\newcommand\syn[1]{\under{#1}{\downarrow}}
+\newcommand\smallsquare{\mathbin{\vcenter{\hbox{\scalebox{0.7}{$\square$}}}}}
+\newcommand\smallat{{\mkern 1mu\vcenter{\hbox{\scalebox{0.7}{@}}}\mkern-1mu}}
+\newcommand\addr[2]{#1\smallat#1}
+\newcommand\khat[1]{\hat{#1}}
+\newcommand\at[2]{\&#1.#2}
+\newcommand\prin{\ensuremath{\,^*\!\!\!\in}}
+\newcommand\prnotin{\ensuremath{\,^*\!\!\!\notin}}
+
+\newcommand\flambda[1]{\lambda^{#1}\ignorespaces}
+\renewcommand\itcorrect[1]{#1}
+
+\newcommand\compop{\ensuremath{{+\!+}}}
+\newcommand\appop{\ensuremath{{{+\!+}.}}}
+
+~
+
+&bignegskip;
+
+# Lecture 1: Linear Functional Programming
+
+## SNAX
+
+## Types
+
+~ begin columns 
+~ begin column { width:35%; }
+
+~ infer
+\quad
+------------
+() : 1
+~
+
+~ infer
+e : A
+-----------------
+@inl e : A + B
+~
+
+~ infer
+e : B
+-----------------
+@inr e : A + B
+~
+
+
+~ end column
+~ begin column
+
+~ infer
+
+------------
+() @value
+~
+
+~ infer
+v @value
+---------------
+@inl v @value
+~
+
+~ infer
+v @value
+-------------------------
+@inr v @value
+~
+
+~ end column
+~ end columns
+
+### Sum Types
+
+### Equireqursive Types
+
+### Computation
+
+### Match construct
