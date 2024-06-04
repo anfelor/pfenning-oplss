@@ -94,7 +94,6 @@ mathpre {
            //\beff([0-9])/\epsilon_{\1}\
            //\.\.\./{\dots}\
            // \. /\cdot{}\
-           //\bnil(?![a-zA-Z])/\cdot{}\
            // oo /\bigcdot{}\
            // o /\circ{}\
            //00/\varnothing{}\
