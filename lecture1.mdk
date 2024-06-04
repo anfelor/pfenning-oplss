@@ -287,6 +287,8 @@ e : +\{ l : A_l \}_{l \in L} \quad x : A_l |- e_l : C (\forall l \in L)
 @match e @with (l(x) => e_l)_{l \in L} : C
 ~
 
+Note that every branch in the match needs to use the same set of variables.
+
 For pairs, we need to use a different approach to avoid re-using variables:
 
 ~ begin columns 
@@ -320,6 +322,17 @@ D,G |- @match e @with (x,y) => e' : C
 
 How to implement? The obvious solution is to just check the
 preconditions and make sure that they partition the variables.
+However, this does not perform well.
+
+We could instead use a *subtractive* approach.
+1. Typecheck the expression in question, yielding a set of used variables `A`.
+2. Typecheck the left precondition, yielding a new set of used variables `B`.
+3. Subtract `B` from `A` and typecheck the right precondition, ensuring that it uses all remaining variables.
+
+In practice, Snax uses an *additive* approach.
+1. Typecheck left precondition, yielding a set of used variables `A`.
+2. Typecheck the right precondition, yielding a set of used variables `B`.
+3. Typecheck the expression in question, ensuring that it uses all the variables from `A` and `B` exactly once.
 
 Back to the type rules for other types:
 
