@@ -310,6 +310,8 @@ x : A |- x : A
 ~ end column
 ~ end columns
 
+We can only apply this rule if `x` is the only variable in the context.  Otherwise, there could be unused variables.
+
 Note: variables must be unique in a context.
 
 ~ infer
@@ -356,3 +358,5 @@ plus x y = match x with
   | zero () => y
   | succ x' => succ (plus x' y)
 ```
+
+Note that in the first arm, a pattern like `zero u` would not work, since `u` would be unused.
