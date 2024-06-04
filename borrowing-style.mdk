@@ -415,10 +415,9 @@ Tex Header*:
 }
 
 @if @TechReport {
+  Title Note: Lecture notes for Frank Pfennings course at OPLSS 2024
   Logo      : True
   xAcm Format: sigplan,10pt,nonacm
-  Conference      : &TechNR;
-  Conference Short: &TechNR;
   Conference Date : Jul 10
   Conference Year : 2023
   Conference Location:

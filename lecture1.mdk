@@ -9,43 +9,16 @@ Submit      : False
 Todo        : True
 Tight       : False
 
-Title       : Frank Pfenning: Adjoint Functional Programming
-TechNR      :
-
+Title       : Adjoint Functional Programming
+Title Note  : Lecture notes for Frank Pfennings course at OPLSS 2024
 Short Title : &Title;
 
-Author      : Anton Lorenzen
-Affiliation : School of Informatics, University of Edinburgh, UK
-Email       : anton.lorenzen@ed.ac.uk
-
-Keywords    : FIP, FBIP, Perceus, Reference Counting, Lean
-
-ISBN            :
-DOI             :
-
-Acm Copyright   : rightsretained
-Acm Copyright   : none
-Acm Journal     : PACMPL
-Acm Number      : OOPSLA
-Acm Article     : 40
-Acm Month       : 1
-Acm Volume      : 7
-Acm Format      : acmsmall,screen
-@anon Acm Format: acmsmall,review,anonymous,nonacm
-Acm SubmissionID: popl23main-p271-p
-Acm Received    : 2022-07-07
-Acm Received Accepted: 2022-11-07
-
-Bibliography    : daan2022.bib
+Bibliography    : pfenning.bib
 Math Dpi        : 300
 Math Concurrency: 8
 xPackage         : trfrac
 Package         : graphicx
 Embed           : 1000
-
-Tex Header:
-    \usepackage{pdflscape}
-
 
 prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 
@@ -78,18 +51,17 @@ prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 
 ~ HtmlOnly
 [TITLE]
-
-[TOC]
 ~
 
+~ begin abstract
+These are the lecture notes for Frank Pfenning's course at OPLSS 2024.
+~ end abstract
+
 ~TexRaw
+\author{Nicholas Coltharp}
 \author{Anton Lorenzen}
-\affiliation{
-  \institution{University of Edinburgh}
-  \city{Edinburgh}
-  \country{UK}
-}
-\email{anton.lorenzen@ed.ac.uk}
+\author{Wesley Nuzzo}
+\author{Xiaotian Zhou}
 
 \title{\mdtitle}
 \maketitle
@@ -129,9 +101,25 @@ prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 
 &bignegskip;
 
+&bignegskip;
+
+&bignegskip;
+
 # Lecture 1: Linear Functional Programming
 
+Linear logic: 1987 or earlier.
+Relevance has been known for a while, but implementation takes a while.
+But see, eg, Rust: things are changing.
+
 ## SNAX
+
+In this course, we use the SNAX programming language (its name derives from proof theory). It has the following features:
+
+- Substructural programming (linear + non-linear)
+- Inference
+- Overloading (between linear/non-linear versions)
+- Intermediate language also based in proof theory: it is a proof-theoretic compiler
+- pretty decent performance comparable to MLTon
 
 ## Types
 
@@ -242,6 +230,8 @@ K(v) @value
 
 ### Pairs
 
+&nbsp;
+
 ~ begin columns 
 ~ begin column { width:50%; }
 
@@ -290,7 +280,7 @@ e : +\{ l : A_l \}_{l \in L} \quad x : A_l |- e_l : C (\forall l \in L)
 For pairs, we need to use a different approach to avoid re-using variables:
 
 ~ begin columns 
-~ begin column { width:70%; }
+~ begin column { width:50%; }
 
 ~ infer
 G |- e1 : A \quad D |- e2 : B
