@@ -55,6 +55,7 @@ prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 
 ~ begin abstract
 These are the lecture notes for Frank Pfenning's course at OPLSS 2024.
+&bigskip;
 ~ end abstract
 
 ~TexRaw
@@ -98,6 +99,12 @@ These are the lecture notes for Frank Pfenning's course at OPLSS 2024.
 \newcommand\smallat{{\mkern 1mu\vcenter{\hbox{\scalebox{0.7}{@}}}\mkern-1mu}}
 \newcommand{\up}[1]{\lceil #1\rceil}
 ~
+
+&bignegskip;
+
+&bignegskip;
+
+&bignegskip;
 
 # Lecture 2: From PL to Logic and Back ($\text{x}$2?)
 
@@ -160,18 +167,17 @@ D,G |- @match e @with (l(x) => e_l')_{l \in L} : C
 
 We have to use every variable exactly once.
 
-Next, we will look at an reduction relation for the language.
-We want to see that there is no garbage.
+## Reduction relation
 
 In the lecture, we will see the intuition for the theorems,
 but not include proofs. You can do them yourself if you want.
 
-Dynamics: want to show type soundness. Want to prove slightly different:
-also prove that there is no garbage.
+Next, we will look at an reduction relation for the language.
+In the dynamic semantics, we want to show type soundness and also something different:
+we want to show that there is no garbage at the end of the evaluation.
 
 We can set up a close correspondence between the static rules and the dynamic rules.
 The proof will be easier if the rules are very close.
-
 At runtime, if we have a judgement such as:
 
 ~ mathpre
@@ -205,48 +211,46 @@ $G$ will be a variable map: $\eta : G$.
 
 $\eta$ is an _environment_. $G$ is a _context_.
 
-<!-- \rightsquigarrow is different -->
-
 Under these preconditions, we want to run the program as
-$\eta |- e \rightsquigarrow v$.
-
+$\eta\, |- e \hookrightarrow v$.
 But splitting the context for pairs will create a problem:
 
 ~ infer
-? |- e_1 \rightsquigarrow v_1 \quad ? |- e_2 \rightsquigarrow v_2
+? |- e_1 \hookrightarrow v_1 \quad ? |- e_2 \hookrightarrow v_2
 -----------------------
-\eta |- (e_1, e_2) \rightsquigarrow (v_1, v_2)
+\eta\, |- (e_1, e_2) \hookrightarrow (v_1, v_2)
 ~
 
-How will we split the environment?
-We can't split, because then we would always have to traverse $e1$ to see
-which the variables are to figure out how to do the split. (remember that this
-is evaluated at runtime).
+How will we split the environment and write for the "?" in the rule?
+We can't split $\eta$, because then we would always have to traverse $e1$
+(at runtime!) to see
+which the variables are to figure out how to do the split.
 
-Because this type checks: we can put $\eta$ on both sides, since we know this
-will be well-formed.
+### The subtractive approach
 
-One way to do this: use the subtractive approach: After $e1$ is finished, we
+However, we don't actually have to split $\eta$: under the assumption that this type checks,
+we can put $\eta$ on both sides, since we know this will be well-formed.
+One way to do this: use the _subtractive_ approach. After $e1$ is finished, we
 get back an $\eta_1$ of variables that are unused. We then pass $\eta_1$ to
 the evaluation of $e2$ and get back an empty environment.
 But actually, we have to do this everywhere: $e2$ returns an environment $\eta_2$,
 which we return from the rule:
 
 ~ infer
-\eta |- e_1 \rightsquigarrow v_1 | \eta_1 \quad \eta_1 |- e_2 \rightsquigarrow v_2 | \eta_2
+\eta\, |- e_1 \hookrightarrow v_1 \backslash \eta_1 \quad \eta_1 |- e_2 \hookrightarrow v_2 \backslash \eta_2
 -----------------------
-\eta |- (e_1, e_2) \rightsquigarrow (v_1, v_2) | \eta_2
+\eta\, |- (e_1, e_2) \hookrightarrow (v_1, v_2) \backslash \eta_2
 ~
 
-This also corresponds to the type checker.
+This also corresponds to how the type checker might check that variables are only used once.
 
-Q: Is there are more logical way to do this? It seems like much gets hidden here?
-A: Yes, taking some shortcuts here. In the subtractive approach:
+- Q: Is there are more logical way to do this? It seems like much gets hidden here?
+- A: Yes, taking some shortcuts here. In the subtractive approach:
 
 ~ infer
-G |- e1 : A | D \quad D |- e2 : B | D'
+G |- e1 : A \backslash D \quad D |- e2 : B \backslash D'
 -----------------------
-G |- (e_1, e_2) : A \times B | D'
+G |- (e_1, e_2) : A \times B \backslash D'
 ~
 
 Can we write the rest of the rules now? Yes, let's look at variables:
@@ -254,127 +258,135 @@ Can we write the rest of the rules now? Yes, let's look at variables:
 ~ infer
 \quad
 ------------
-G, x : A |- x : A | G
+G, x : A |- x : A \backslash G
 ~
 
-However, it is much better to do things _additive_. Subtractive has several issues:
-  - It forces left-to-right evaluation, where you have to look at $e1$ before you look at $e2$.
+### The additive approach
 
-In the additive approach: We have a context $G |- e : A | \Omega$ where $\Omega$ are the variables
+However, it is much better to do things _additive_. Subtractive has an issue:
+It forces left-to-right evaluation, where you have to look at $e1$ before you look at $e2$.
+
+In the additive approach: We have a context $G |- e : A \backslash \Omega$ where $\Omega$ are the variables
 that are actually used. (in contrast to the remainder as before). The pair rule becomes:
 
 ~ infer
-G |- e1 : A | \Omega_1 \quad G |- e2 : B | \Omega_2
+G |- e1 : A \backslash \Omega_1 \quad G |- e2 : B \backslash \Omega_2
 -----------------------
-G |- (e1, e2) : A \times B | \Omega_1, \Omega_2
+G |- (e1, e2) : A \times B \backslash \Omega_1, \Omega_2
 ~
 
 The result $\Omega_1, \Omega_2$ is undefined if there is any overlap between $\Omega_1$ and $\Omega_2$
-(if they share a variable).
+(eg. if they share a variable).
 
 ~ infer
-\eta |- e_1 \rightsquigarrow v1 | \omega_1 \quad \eta |- e_2 \rightsquigarrow v2 | \omega_2
+\eta\, |- e_1 \hookrightarrow v1 \backslash \omega_1 \quad \eta\, |- e_2 \hookrightarrow v2 \backslash \omega_2
 -----------------------
-\eta |- (e_1, e_2) \rightsquigarrow (v_1, v_2) | (\omega_1, \omega_2)
+\eta\, |- (e_1, e_2) \hookrightarrow (v_1, v_2) \backslash (\omega_1, \omega_2)
 ~
 
 If our expression type-checks then $\omega_1$ and $\omega_2$ will have disjoint domains.
 If we add non-linear variables, these can occur on both sides.
 
-Q: Where would our program get stuck if it doesn't type-check?
-A: First off, not every program that doesn't type-check will get stuck.
-   But if it gets stuck: the $\omega_1$ and $\omega_2$ might have overlapping domains,
-   where it would get stuck.
+- Q: Where would our program get stuck if it doesn't type-check?
+- A: First off, not every program that doesn't type-check will get stuck.
+  But if it gets stuck: the $\omega_1$ and $\omega_2$ might have overlapping domains,
+  where it would get stuck.
 
 But we have to also change our definition of environments.
 What is $\eta$ in this new rule now?
 
 In response to Q: $G$ is a typing context, but $\Omega$ just returns the used variables.
 
-Q: Is $\Omega$ an over-approximation of the variables that are used?
-A: No, we want $\Omega$ to be _exactly_ the variables used in $e$.
-   We can relate our new judgement to the old one:
-   Soundness: If $G |- e : A | \Omega$ then $\Omega |- e : A$ and $\Omega \subseteq G$.
-   Completeness: If $\Omega |- e : A$ and $\Omega \subseteq G$, then $G |- e : A | \Omega$.
+- Q: Is $\Omega$ an over-approximation of the variables that are used?
+- A: No, we want $\Omega$ to be _exactly_ the variables used in $e$.
+  We can relate our new judgement to the old one:
+  Soundness: If $G |- e : A \backslash \Omega$ then $\Omega |- e : A$ and $\Omega \subseteq G$.
+  Completeness: If $\Omega |- e : A$ and $\Omega \subseteq G$, then $G |- e : A \backslash \Omega$.
 
-Q: If we were to set out to try and prove this, would we need two different versions of the typing rules?
-A: Yes, you would show that for each derivation of one of them, you get a derivation of the other.
-   This is _rule induction_.
+- Q: If we were to set out to try and prove this, would we need two different versions of the typing rules?
+- A: Yes, you would show that for each derivation of one of them, you get a derivation of the other.
+  This is _rule induction_.
 
-Q: Isn't there an overapproximation in $\Omega \subseteq G$?
-A: No, since our old judgement is always precise.
+- Q: Isn't there an overapproximation in $\Omega \subseteq G$?
+- A: No, since our old judgement is always precise.
 
-Q: Why can they not be the same?
-A: Induction would fail in the pair rule, since even if $G = \Omega_1,\Omega_2$, then $G != \Omega_1$ or $G != \Omega_2$.
+- Q: Why can they not be the same?
+- A: Induction would fail in the pair rule, since even if $G = \Omega_1,\Omega_2$, then $G != \Omega_1$ or $G != \Omega_2$.
+
+### Soundness of additive approach
 
 What do we want the program to satisfy? We have to change our soundness theorem:
 
-If $G |- e : A | \Omega$ and $\eta : G$ and $\omega : \Omega$
-then $\eta |- e \rightsquigarrow v | \omega$ (and $v : A$).
+If $G |- e : A \backslash \Omega$ and $\eta : G$ and $\omega : \Omega$
+then $\eta\, |- e \hookrightarrow v \backslash \omega$ (and $v : A$).
 
 Since we defined them in the same way, we can now relate them in the same way.
 We can prove this theorem with this kind of dynamics.
 
 How do we know that in the end there is no garbage?
 
-We write $\eta |- e \rightsquigarrow v | \eta$ so that everything in $\eta$ is actually used.
+We write $\eta\, |- e \hookrightarrow v \backslash \eta$ so that everything in $\eta$ is actually used.
 We can prove this for the new dynamics.
 
 This gives us both soundness and that there will be no garbage in the end.
 
-Q: Are the $v$ and the $\omega$ existentially quantified in this statement?
-A: Yes, great question! We don't know that $e$ evaluates to $v$, since that would imply termination.
+ - Q: Are the $v$ and the $\omega$ existentially quantified in this statement?
+ - A: Yes, great question! We don't know that $e$ evaluates to $v$, since that would imply termination.
    We want to additionally quantify over the $v$ and $\omega$:
 
-If $G |- e : A | \Omega$ and $\eta : G$ and $\eta |- e \rightsquigarrow v | \omega$,
+If $G |- e : A \backslash \Omega$ and $\eta : G$ and $\eta\, |- e \hookrightarrow v \backslash \omega$,
 then $\omega : \Omega$ (and $v : A$).
 
-Q: We don't have recursion and so it should terminate?
-A: Yes, that is true, but then we can't prove that using induction since termination is a stronger property.
+- Q: We don't have recursion and so it should terminate?
+- A: Yes, that is true, but then we can't prove that using induction since termination is a stronger property.
 
-Q: Don't we use the evaluation as a precondition now and thus can't catch stuckness?
-A: Yes, this is no longer type soundness. We will use a different approach next lecture?
+- Q: Don't we use the evaluation as a precondition now and thus can't catch stuckness?
+- A: Yes, this is no longer type soundness. We will use a different approach next lecture?
 
-Q: TODO missed
+- Q: Can you explain what $\eta : G$ means?
+- A: $\eta$ is a map from variables to values. If the variable has type $A$ in $G$, then the value has type $A$ in $\eta$.
 
-Q: Can you explain what $\eta : G$ means?
-A: $\eta$ is a map from variables to values. If the variable has type $A$ in $G$, then the value has type $A$ in $\eta$.
+- Q: Will you show a small-step semantics?
+- A: Not for this language, but next lecture.
 
-Q: Will you show a small-step semantics?
-A: Not for this language, but next lecture.
+- Q: Does the merging extend to top-level variables?
+- A: Yes, treat them like non-linear variables.
 
-Q: Does the merging extend to top-level variables?
-A: Yes, treat them like non-linear variables.
+### Affine types
 
-A small game: how can we make this system _affine_ so that variable are used at most once?
+We can play a small game: how can we make this system _affine_ so that variable are used at most once?
 What happens to the merge operator?
 
-At the top-level we have to check for $G |- e : A | \Omega$ that $G = \Omega$ in the linear version to ensure that
+At the top-level we have to check for $G |- e : A \backslash \Omega$ that $G = \Omega$ in the linear version to ensure that
 everything in $G$ is used exactly once. In an affine setting, we can allow $\Omega \subseteq G$.
 
-Q: It seems like the typing tree is equal to the evaluation tree?
-A: Yes, since we haven't looked at interesting rules. Inviting comments: is the derivation tree the same as the evaluation tree? Student: For matches there is a difference, since we pick a branch of each match in the evaluation tree. Frank: Is there another discrepancy? After a pause: I see we have to write more rules.
+- Q: It seems like the typing tree is equal to the evaluation tree?
+- A: Yes, since we haven't looked at interesting rules. Inviting comments: is the derivation tree the same as the evaluation tree? Student: For matches there is a difference, since we pick a branch of each match in the evaluation tree. 
+
+### Further typing rules
+
+&nbsp;
 
 ~ infer
 \quad
 ------------
-\cdot\, |- () \rightsquigarrow () | \cdot
+\cdot\, |- () \hookrightarrow () \backslash \cdot
 ~
 
 ~ infer
-\eta |- e \rightsquigarrow (v1, v2) | \omega \quad \eta, x\mapsto v1, y\mapsto v2 |- e' \rightsquigarrow v' | (\omega', x\mapsto v1, y\mapsto v2)
+\eta\, |- e \hookrightarrow (v1, v2) \backslash \omega \quad \eta, x\mapsto v1, y\mapsto v2 |- e' \hookrightarrow v' \backslash (\omega', x\mapsto v1, y\mapsto v2)
 -----------------------
-\eta |- @match e @with (x, y) => e' \rightsquigarrow v' | (\omega, \omega')
+\eta\, |- @match e @with (x, y) => e' \hookrightarrow v' \backslash (\omega, \omega')
 ~
 
-Let's continue.
+### Top-level definitions
 
 Not much is happening in the computation. A purely linear type system, doesn't allow you to write many
 interesting programs: we need top-level definitions. However, studying the whole language is very complicated,
 so we study the simple case here.
 
-Q: What is a top-level definition?
-A:
+ - Q: What is a top-level definition?
+ - A: For example:
 
 ```
 plus (x : nat) (y : nat) : nat
@@ -384,26 +396,19 @@ plus x y = ...
 These top-level definitions also have something important to tell us logically.
 I will tell you at the end of the lecture.
 
-Let's go back to logic: We write a natural deduction system, where $G |- A$ says that the
-assumptions in $G$ can prove $A$. $D, G \coloneqq \cdot\, | G, A$. However, each assumption
+## Back to Logic
+
+We write a natural deduction system, where $G |- A$ says that the
+assumptions in $G$ can prove $A$. $D, G \coloneqq \cdot\, \backslash G, A$. However, each assumption
 needs to be used exactly once, giving us linear logic.
+
+~ begin columns 
+~ begin column { width:30%; }
 
 ~ infer
 D |- A \quad G |- B
 --------------------
 D,G |- A \otimes B
-~
-
-~ infer
-D |- A \otimes B \quad G, A, B |- C
------------------------------------
-D,G |- C
-~
-
-~ infer
-\quad
--------------------
-A |- A
 ~
 
 ~ infer
@@ -418,20 +423,39 @@ G |- B
 G |- A \oplus B
 ~
 
+~ end column
+~ begin column
+
+~ infer
+\quad
+-------------------
+A |- A
+~
+
+~ infer
+D |- A \otimes B \quad G, A, B |- C
+-----------------------------------
+D,G |- C
+~
+
 ~ infer
 D |- A \oplus B \quad G, A |- C \quad G, B |- C
 -----------------------------------
 D,G |- C
 ~
 
+~ end column
+~ end columns
+
 Historically, this was the first formulation of linear logic.
 From it, people later developed linear type systems.
-
-Our operators are:
+Our operators so far are:
 
 ~ mathpre
 A, B \coloneqq 1 \mid A \otimes B \mid A \oplus B
 ~
+
+### The operators of linear logic
 
 In linear logic, there is one more operator: "of course A", written $!A$.
 This allows us to reuse assumptions. We can model an ordinary function $A => B$,
@@ -449,13 +473,18 @@ The first row is "positive" and the second row is "negative".
 The first row can be duplicated by copying, eg. $1 \oplus 1 |- (1 \oplus 1) \otimes (1 \oplus 1)$,
 where we duplicate the boolean $1 \oplus 1$.
 
-Q: How do you prove this using the logic?
-A: Use the sum-elimination rule, where $1 \oplus 1 |- 1 \oplus 1$.
+ - Q: How do you prove this using the logic?
+ - A: Use the sum-elimination rule, where $1 \oplus 1 |- 1 \oplus 1$.
    Then we have to show that $1 |- (1 \oplus) \otimes (1 \oplus 1)$.
    We use unit elimination so that we have to show $\cdot\, |- (1 \oplus) \otimes (1 \oplus 1)$.
    Then we use the introduction rules to obtain the term.
 
+### Linear Functions
+
 Lastly, we will show the rules for $A -o B$ and $A \& B$.
+
+~ begin columns 
+~ begin column { width:40%; }
 
 ~ infer
 G,A |- B
@@ -463,7 +492,8 @@ G,A |- B
 G |- A -o B
 ~
 
-We will not be able to prove $A -o (B -o A)$ in general, since $B$ is not used in the result.
+~ end column
+~ begin column
 
 ~ infer
 D |- A -o B \quad G |- A
@@ -471,10 +501,17 @@ D |- A -o B \quad G |- A
 D,G |- B
 ~
 
+~ end column
+~ end columns
+
+We will not be able to prove $A -o (B -o A)$ in general, since $B$ is not used in the result.
 This is different from the rules we have seen so far, since we just plug the terms together without modifying the contexts.
 
 How do we model this in our linear programming language? We use just one arrow $->$ and we distinguish regular from
 linear functions using the variables.
+
+~ begin columns 
+~ begin column { width:40%; }
 
 ~ infer
 G, x : A |- e : B
@@ -482,14 +519,23 @@ G, x : A |- e : B
 G |- \lambda x.e : A -> B
 ~
 
+~ end column
+~ begin column
+
 ~ infer
 D |- e1 : A -o B \quad G |- e2 : A
 -------------------
 D,G |- e1 e2 : B
 ~
 
+~ end column
+~ end columns
+
 You can not pattern-match against a lambda expression. This is a fundamental distinction between the positive and the negative types.
-You can take a function and apply it and see what happens. Based on this, what do you think the elements of the $A \& B$ type should be?
+
+### Lazy pairs
+
+You can not match on take a function and match on it.. instead you can only apply it and see what happens. Based on this, what do you think the elements of the $A \& B$ type should be?
 Let's look at the logical rule:
 
 ~ infer
@@ -500,11 +546,17 @@ G |- A \& B
 
 Oh, we duplicate $G$ on both sides! How can this be sound?
 
+~ begin columns 
+~ begin column { width:50%; }
+
 ~ infer
 G |- A \& B
 -------------------
 G |- A
 ~
+
+~ end column
+~ begin column
 
 ~ infer
 G |- A \& B
@@ -512,8 +564,14 @@ G |- A \& B
 G |- B
 ~
 
+~ end column
+~ end columns
+
 We can only extra one of them! This is similar to the match-construct for sums.
 In the programming language:
+
+~ begin columns 
+~ begin column { width:40%; }
 
 ~ infer
 G |- e1 : A \quad G |- e2 : B
@@ -521,11 +579,17 @@ G |- e1 : A \quad G |- e2 : B
 G |- (e1, e2) : A \& B
 ~
 
+~ end column
+~ begin column { width:30%; }
+
 ~ infer
 G |- e : A \& B
 -------------------
 G |- e.\pi_1 : A
 ~
+
+~ end column
+~ begin column
 
 ~ infer
 G |- e : A \& B
@@ -533,9 +597,15 @@ G |- e : A \& B
 G |- e.\pi_2 : B
 ~
 
+~ end column
+~ end columns
+
 This is a _lazy pair_, we don't evaluate the components when constructing the pair. We can only 
 evaluate one of them when we deconstruct the pair.
 We can generalize this to $\&\{ l : A_l \}_{l \in L}$.
+
+~ begin columns 
+~ begin column { width:60%; }
 
 ~ infer
 G |- e_l : A_l (\forall l \in L)
@@ -543,13 +613,19 @@ G |- e_l : A_l (\forall l \in L)
 G |- (l = e_l) : \&\{ l : A_l \}_{l \in L}
 ~
 
+~ end column
+~ begin column
+
 ~ infer
 G |- e : \&\{ l : A_l \}_{l \in L}
 -------------------
 G |- e.k : A_k
 ~
 
-The main takeaway: In linear logic we have positive and negative types.
-We can deconstruct the positive types. We can not actually deconstruct the negative types.
+~ end column
+~ end columns
 
 We will use the lazy records for object oriented programming.
+
+The main takeaway: In linear logic we have positive and negative types.
+We can deconstruct the positive types. We can not actually deconstruct the negative types.
