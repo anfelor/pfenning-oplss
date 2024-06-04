@@ -287,8 +287,6 @@ e : +\{ l : A_l \}_{l \in L} \quad x : A_l |- e_l : C (\forall l \in L)
 @match e @with (l(x) => e_l)_{l \in L} : C
 ~
 
-Note that every branch in the match needs to use the same set of variables.
-
 For pairs, we need to use a different approach to avoid re-using variables:
 
 ~ begin columns 
@@ -349,6 +347,8 @@ D |- e : +\{ l : A_l \}_{l \in L} \quad G, x : A_l |- e_l : C (\forall l \in L)
 ------------
 D,G |- @match e @with (l(x) => e_l)_{l \in L} : C
 ~
+
+Note that every branch of the match must have the same context $G$.  This is just to say that every branch must use the same set of variables.
 
 Why is it okay to re-use $G$? TODO
 
