@@ -320,19 +320,19 @@ D |- e : A \times B \quad G, x : A, y : B |- e' : C
 D,G |- @match e @with (x,y) => e' : C
 ~
 
-How to implement? The obvious solution is to just check the
-preconditions and make sure that they partition the variables.
-However, this does not perform well.
+How to implement? The obvious solution is to just check the preconditions and
+make sure that they partition the variables.  However, this does not perform
+well.  Better approaches will be covered in the next lecture.
 
-We could instead use a *subtractive* approach.
-1. Typecheck the expression in question, yielding a set of used variables `A`.
-2. Typecheck the left precondition, yielding a new set of used variables `B`.
-3. Subtract `B` from `A` and typecheck the right precondition, ensuring that it uses all remaining variables.
+<!-- We could instead use a *subtractive* approach. -->
+<!-- 1. Typecheck the expression in question, yielding a set of used variables `A`. -->
+<!-- 2. Typecheck the left precondition, yielding a new set of used variables `B`. -->
+<!-- 3. Subtract `B` from `A` and typecheck the right precondition, ensuring that it uses all remaining variables. -->
 
-In practice, Snax uses an *additive* approach.
-1. Typecheck left precondition, yielding a set of used variables `A`.
-2. Typecheck the right precondition, yielding a set of used variables `B`.
-3. Typecheck the expression in question, ensuring that it uses all the variables from `A` and `B` exactly once.
+<!-- In practice, Snax uses an *additive* approach. -->
+<!-- 1. Typecheck left precondition, yielding a set of used variables `A`. -->
+<!-- 2. Typecheck the right precondition, yielding a set of used variables `B`. -->
+<!-- 3. Typecheck the expression in question, ensuring that it uses all the variables from `A` and `B` exactly once. -->
 
 Back to the type rules for other types:
 
