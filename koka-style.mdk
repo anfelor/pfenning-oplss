@@ -90,7 +90,7 @@ mathpre {
            //\bevv(?![a-zA-Z\-])/w\
            //\bG([0-9ni])/\Gamma_{\1}\
            //\bD([0-9ni])/\Delta_{\1}\
-           //\b([exp])([0-9ni])/\mathid{\1}_{\2}\
+           //\b([ex])([0-9ni])/\mathid{\1}_{\2}\
            //\beff([0-9])/\epsilon_{\1}\
            //\.\.\./{\dots}\
            // \. /\cdot{}\

@@ -127,6 +127,7 @@ pre,.code2 {
            //==/\cong{}\
            //\bfhat/\hat{f}\
            //\.\+/{\oplus}\
+           //\-o/{\multimap}\
            //\.\*/{\otimes}\
            //\.\-/{\ominus}\
            //\|\-S\b/{\,\vdash{}}\
