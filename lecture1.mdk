@@ -116,9 +116,6 @@ prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 \newcommand{\gray}[1]{\colorbox{gainsboro}{\strut$#1$}}
 \newcommand{\tr}[1]{\lfloor #1\rfloor}
 \newcommand{\comm}{\mathbin{\triangleright}}
-\newcommand\rc[3]{#1 \mapsto^{#2}\! #3}
-\newcommand\st[3]{#1 \mapsto\! #3}
-\newcommand\fold[1]{(\mkern-3.5mu|#1|\mkern-3mu)}
 
 \newcommand\under[2]{\underset{\raisebox{2mm}{$\scriptstyle #2$}}{#1}}
 \newcommand\inhx[2]{\under{#1}{\under{\uparrow}{#2}}}
@@ -127,18 +124,7 @@ prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 \newcommand\syn[1]{\under{#1}{\downarrow}}
 \newcommand\smallsquare{\mathbin{\vcenter{\hbox{\scalebox{0.7}{$\square$}}}}}
 \newcommand\smallat{{\mkern 1mu\vcenter{\hbox{\scalebox{0.7}{@}}}\mkern-1mu}}
-\newcommand\addr[2]{#1\smallat#1}
-\newcommand\khat[1]{\hat{#1}}
-\newcommand\at[2]{\&#1.#2}
-\newcommand\prin{\ensuremath{\,^*\!\!\!\in}}
-\newcommand\prnotin{\ensuremath{\,^*\!\!\!\notin}}
-
-\newcommand\flambda[1]{\lambda^{#1}\ignorespaces}
-\renewcommand\itcorrect[1]{#1}
-
-\newcommand\compop{\ensuremath{{+\!+}}}
-\newcommand\appop{\ensuremath{{{+\!+}.}}}
-
+\newcommand{\up}[1]{\lceil #1\rceil}
 ~
 
 &bignegskip;
@@ -150,7 +136,7 @@ prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 ## Types
 
 ~ begin columns 
-~ begin column { width:35%; }
+~ begin column { width:50%; }
 
 ~ infer
 \quad
@@ -175,7 +161,7 @@ e : B
 ~ begin column
 
 ~ infer
-
+\quad
 ------------
 () @value
 ~
@@ -195,10 +181,167 @@ v @value
 ~ end column
 ~ end columns
 
+And we define
+
+~ mathpre
+2 = 1 + 1
+@true = @inl ()
+@false = @inr ()
+~
+
 ### Sum Types
+
+But in fact, we'll use _labels_: $+\{l : A_l\}$ for $L != 00$, finite
+($L$ has to be non-empty due to implementation issues).
+
+~ mathpre
+A + B = +\{@inl : A, @inr : B\}
+~
+
+~ mathpre
+@bool = +\{@true : 1, @false : 1\}
+@true () : @bool
+@false () : @bool
+~
 
 ### Equireqursive Types
 
+We can form the natural numbers using an equirecursive (_not_ isorecursive) approach.
+
+~ mathpre
+@nat = +\{@zero : 1, @succ : @nat\}
+\up{0} = @zero ()
+\up{1} = @succ (@zero ())
+\up{2} = @succ (@succ (@zero ()))
+~
+
+~ begin columns 
+~ begin column { width:50%; }
+
+~ infer
+(K \in L) \quad e : A_l
+------------
+K(e) : +\{ l : A_l \}_{l \in L}
+~
+
+~ end column
+~ begin column
+
+~ infer
+v @value
+------------
+K(v) @value
+~
+
+~ end column
+~ end columns
+
+~ mathpre
+@list = +\{ @nil : 1, @cons : @nat \times @list \}
+~
+
+### Pairs
+
+~ begin columns 
+~ begin column { width:50%; }
+
+~ infer
+e1 : A \quad e2 : B
+------------
+(e1, e2) : A \times B
+~
+
+~ end column
+~ begin column
+
+~ infer
+v1 @value \quad v2 @value
+------------
+(v1, v2) @value
+~
+
+~ end column
+~ end columns
+
 ### Computation
 
+Barely, we are not introducing function types.
+
+```
+not (x : bool)
+not x = match x with
+  | true a => false a
+  | false a => true a
+```
+
+Note: It would _not_ be legal to use `()` instead of `a` on the right-hand side!
+That would not be _linear_.
+
 ### Match construct
+
+&nbsp;
+
+~ infer
+e : +\{ l : A_l \}_{l \in L} \quad x : A_l |- e_l : C (\forall l \in L)
+------------
+@match e @with (l(x) => e_l)_{l \in L} : C
+~
+
+For pairs, we need to use a different approach to avoid re-using variables:
+
+~ begin columns 
+~ begin column { width:70%; }
+
+~ infer
+G |- e1 : A \quad D |- e2 : B
+------------
+G,D |- (e1, e2) : A \times B
+~
+
+~ end column
+~ begin column
+
+~ infer
+\quad
+------------
+x : A |- x : A
+~
+
+~ end column
+~ end columns
+
+Note: variables must be unique in a context.
+
+~ infer
+D |- e : A \times B \quad G, x : A, y : B |- e' : C
+------------
+D,G |- @match e @with (x,y) => e' : C
+~
+
+How to implement? The obvious solution is to just check the
+preconditions and make sure that they partition the variables.
+
+Back to the type rules for other types:
+
+~ infer
+\quad
+------------
+|- () : 1
+~
+
+We need to use the empty context, since this term consumes no variables.
+
+~ infer
+D |- e : +\{ l : A_l \}_{l \in L} \quad G, x : A_l |- e_l : C (\forall l \in L)
+------------
+D,G |- @match e @with (l(x) => e_l)_{l \in L} : C
+~
+
+Why is it okay to re-use $G$? TODO
+
+```
+plus (x : nat) (y : nat) : nat
+plus x y = match x with
+  | zero () => y
+  | succ x' => succ (plus x' y)
+```
