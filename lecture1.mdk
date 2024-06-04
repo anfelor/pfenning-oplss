@@ -350,8 +350,6 @@ D,G |- @match e @with (l(x) => e_l)_{l \in L} : C
 
 Note that every branch of the match must have the same context $G$.  This is just to say that every branch must use the same set of variables.
 
-Why is it okay to re-use $G$? TODO
-
 ```
 plus (x : nat) (y : nat) : nat
 plus x y = match x with
