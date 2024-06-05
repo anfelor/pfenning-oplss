@@ -18,6 +18,7 @@ Math Dpi        : 300
 Math Concurrency: 8
 xPackage         : trfrac
 Package         : graphicx
+Package         : tikz
 Embed           : 1000
 
 prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
@@ -108,12 +109,10 @@ These are the lecture notes for Frank Pfenning's lecture at OPLSS 2024.
 
 # Lecture 3: Adjoint Types (& Nodes)
 
-Switching presentation and talk about adjoint types first,
-connect to the modal work in OCaml.
-We can use adjoint types to model the linear mode of that work.
-Not in SNAX: stack allocation, because we have not found the right logic yet.
-
-TODO: what did he say on uniqueness types?
+Since there was an evening lecture on modes in OCaml yesterday,
+we will switch up the lectures and talk about adjoint types first.
+They allow us to reason about linearity in SNAX, just like in OCaml.
+Not yet in SNAX: stack allocation, because we have not found the right logic yet.
 
  - Negation
  - Mixing linear & non-linear programming
@@ -135,20 +134,29 @@ defn map f xs = match xs with
 This `map` function should not compile: we don't use `f` in the `nil` branch
 and use it twice in the `cons` branch.
 
-```
-     U
-A         S
-     L
-```
+We introduce the following lattice of _modes_:
+
+~ texraw
+\usetikzlibrary{cd}
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZARgBoAGAXVJADcBDAGwFcYkQBVEAX1PU1z5CKcqWLU6TVuwCCPPiAzY8BIgCYxEhizaIQAZXn9lQomTVapukABkeEmFADm8IqABmAJwgBbJGRAcCCQAZl4Pbz9EUUDgxGJwkC9fJBigpDVE5KiNWNDuSm4gA
+\begin{tikzcd}
+             & U \arrow[ld, no head] \arrow[rd, no head] &              \\
+A \arrow[rd, no head] &                         & S \arrow[ld, no head] \\
+             & L                       &             
+\end{tikzcd}
+~
+
+where:
 
  - `U` is _unrestricted_.
  - `A` is _affine_ (used at most once).
  - `S` is _strict_ (used at least once).
  - `L` is _linear_ (used exactly once).
 
-Our `map` example checks if we assume the `U` mode as default.
+The reason our `map` example fails is that SNAX assumes the `L`  mode by default.
+Our `map` example checks if we instruct it to use the `U` mode as default.
 Before we introduce non-linear values logically, though,
-we will use iterators:
+we will present this example using iterators:
 
 ```
 type iterator = &{'next : nat -> nat * iterator,
@@ -161,11 +169,11 @@ defn iterate iter xs = match xs with
                        'cons('succ y, iterate iter xs))
 ```
 
-We would have the same problem with `iterate` if we generalized `'succ` to an arbitrary function $f$.
+We would have the same problem with `iterate` if we generalized `'succ` to an arbitrary function `f`.
 
 ## Types
 
-We parameterize types by modes:
+To support the _modes_ above, we parameterize types by modes:
 
 ~ mathpre
 A_m, B_m &\coloneqq 1 \mid A_m \otimes B_m \mid +\{ l : A_m^l \}_{l \in L} \mid \downarrow^k_m A_k (k \geq m)
@@ -173,47 +181,44 @@ A_m, B_m &\coloneqq 1 \mid A_m \otimes B_m \mid +\{ l : A_m^l \}_{l \in L} \mid 
 ~
 
 Remember: the first row is _positive_ and the second row is _negative_.
-We add shift operators to the types to change modes.
-Shifting down moves us down in the lattice and up-shift moves up.
+In contrast to last lecture, we have now added shift operators to the types to change modes.
+Shifting down with $\downarrow^k_m$ moves us down in the lattice from mode $k$ to mode $m$
+and up-shift moves up from mode $i$ to mode $m$.
 
-We can use a type variable `k` for modes:
+Operationally, the downarrow will correspond to a pointer, while the uparrow corresponds to a lazy thunk.
+
+To use modes in our programming example, we can use a mode variable `k` on the type declaration:
 ```
 type nat[k] = +{'zero : 1, 'succ : nat[k]}
 ```
 
-This allows `k` at each mode.
-
-For recursive types, we need to _guard_ the modes. The reason for this is the runtime layout:
-
-```
-nil: 
-
-cons: (pointer to element) (pointer to tail)
-```
-
-But we would inline `cons` and might need infinite space. So we need:
+This allows `nat` to exist at each mode `k`.
+However, for recursive types like `nat`, we actually need to _guard_ the recursion.
+The reason for this is the runtime layout: SNAX tries to pack datatypes as tightly as possible.
+This is a problem for recursive types,
+because fully expanding a recursive type would yield a value of infinite size!
+We can instruct SNAX to use a pointer indirection instead of inlining the data,
+by using the `down` operator. Our `nat` type becomes:
 ```
 type nat[k] = +{'zero : 1, 'succ : down[k] nat[k]}
 ```
 
-In ordinary functional programming the downshift means "pointer" or "box".
-So we can be explicit about data layout.
-
-We can use a different mode parameter for the elements of the list:
+This allows us to be explicit about data layout. But we can do even more:
+the down operator corresponds to the $\downarrow$ type above
+and allows us to shift the mode of a term.
+For example, we can use a different mode parameter for the elements of the list:
 ```
 type list[m k] = +{'nil : 1, 'cons : down[k] nat[k] * down[m] list[m k]}
 ```
 
-This imposes an constraint that `m <= k`.
+Hidden behind this syntax, this imposes an constraint that `m <= k`.
+This extra constraint is necessary, since you can not have an unrestricted list of linear elements.
+However, it is super useful to have a `linear` list where the elements are non-linear.
 
  - Q: How is that ensured?
  - A: This is part of the typing rules for `down`. The outer `m` in the `list` type
      gives the mode of the term. The first mode index is special:
      it is the mode of the whole list.
-
-This is necessary, since you can
-not have an unrestricted list of linear elements.
-However, it is super useful to have a `linear` list where the elements are non-linear.
 
  - Q: Is `down[k]` a pointer or a shift in modes?
  - A: Both! The two ends of a pointer might not have the same mode, but they might well have.
@@ -227,11 +232,11 @@ defn map f xs = match xs with
   | 'cons(<x>, <xs>) => 'cons(<f.force x>, <map f xs>)
 ```
 
-This fails: we need to shift `f` down to the mode of the elements of the list.
+Here, we use $<x>$ to construct a downshifted value and $f.force$ to eliminate an upshifted function.
+Since the downshift is a positive type, we can pattern-match on it.
+Unlike in OCaml, we actually have mode polymorphism.
 
-TODO: type signature of `map`
-
-We can define modes as a preorder:
+SNAX does not have our lattice of modes built-in, so we define the preorder here:
 
 ```
 mode U structural :> S A L
@@ -240,7 +245,7 @@ mode A affine :> L
 mode L linear
 ```
 
-Then we can write:
+Then we can instantiate the `map` function with different modes:
 
 ```
 decl map (f : [U] up[L] (nat[L] -> nat[L])) (xs : list[L L]) : list[L L]
@@ -249,7 +254,8 @@ defn map f xs = match xs with
   | 'cons(<x>, <xs>) => 'cons(<f.force x>, <map f xs>)
 ```
 
-Other types:
+This gives a `map` function for linear lists with linear elements using an unrestricted function `f`.
+Other possible instantiations are:
 
 ```
 decl map (f : [U] up[L] (nat[L] -> nat[L])) (xs : list[L L]) : list[L L]
@@ -259,11 +265,6 @@ decl map (f : [U] up[U] (nat[U] -> nat[U])) (xs : list[U U]) : list[L U]
 
 The last line is fine, since we construct a new list, which can only be used linearly.
 
- - Q: Why do we need a partial order between modes?
- - A: We can define $!A$ as $\downarrow^U_L \uparrow^U_L A_L$
-
-Unlike in OCaml, we can actually do mode polymorphism.
-
  - Q: Does the compiler actually accept the last line? Because it seems to instantiate `m` with both `L` and `U`.
  - A: Yes, that is a bug. We should have said:
 
@@ -271,16 +272,22 @@ Unlike in OCaml, we can actually do mode polymorphism.
 decl map (f : [mf] up[k] (nat[k] -> nat[k])) (xs : list[m k]) : list[r k]
 ```
 
+<!--
  - Q: Can you infer polymorphic modes?
- - A: TODO, didn't catch this
+ - A: TODO, didn't catch this -->
 
- - Q: Why is it better to use up- and down-shifts than use bang?
- - A: Because with bang you basically write a linear program and you always have to deconstruct it all the time.
+## Relation to Linear Logic
 
- - Q: Can you make these different `k`s?
- - A: Yes, but then you would need another up-shift or down-shift.
+We can define $!A$ as $\downarrow^U_L \uparrow^U_L A_L$.
+Some people also write $(\boxempty A_T)_T = \downarrow^U_T \uparrow^U_T A$.
+This is a _comonad_.
 
-TODO: Frank said something about top-level functions.
+ - Q: Why is it better to use up- and down-shifts than use the bang operator $!A$?
+ - A: Because with the bang operator you basically write a linear program
+      and you always have to deconstruct the bang operator all the time.
+      In SNAX, you can mix linear and non-linear programming.
+
+<!--
 
 ~ mathpre
 G |- e : A
@@ -290,9 +297,17 @@ G |- e : A
 f : A[G]
 ~
 
-~ mathpre
-G \geq m
-~
+"indendence"
+
+-->
+
+## Typing rules
+
+For the typing rules, we will have to constrain the context to ensure that all variables bound in it
+have a mode that permits at least certain operations. We write $G \geq m$ to say that all variables in $G$
+have a mode that is at least $m$ in the preorder.
+Then we can give a typing rule for the downshift operator, where we ask that all elements in the context
+have a mode that is at least $k$:
 
 ~ infer
 G \geq k \quad G |- e : A_k
@@ -300,9 +315,13 @@ G \geq k \quad G |- e : A_k
 D_W, G |- <e> : \downarrow^k_m A_k
 ~
 
+In this rule, $D_W$ is a context of variables that can be weakened (eg. are not linear or strict).
+We can eliminate the downshift operator with the following rule:
+
 ~ infer
-D |- e : \downarrow_m^k A_k \quad G, x : A_k |- e' : C_r
+D |- e : \downarrow_m^k A_k \quad D \geq m \geq r \quad G, x : A_k |- e' : C_r
 -----------------------------
 D,G |- @match e @with <x> => e' : C_r
 ~
 
+The full typing rules are given in [Jang et al. 2024](https://arxiv.org/pdf/2402.01428).
