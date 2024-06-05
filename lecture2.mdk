@@ -172,7 +172,7 @@ We have to use every variable exactly once.
 In the lecture, we will see the intuition for the theorems,
 but not include proofs. You can do them yourself if you want.
 
-Next, we will look at an reduction relation for the language.
+Next, we will look at a reduction relation for the language.
 In the dynamic semantics, we want to show type soundness and also something different:
 we want to show that there is no garbage at the end of the evaluation.
 
@@ -221,7 +221,7 @@ But splitting the context for pairs will create a problem:
 \eta\, |- (e_1, e_2) \hookrightarrow (v_1, v_2)
 ~
 
-How will we split the environment and write for the "?" in the rule?
+How will we split the environment and fill in the "?" in the rule?
 We can't split $\eta$, because then we would always have to traverse $e1$
 (at runtime!) to see
 which the variables are to figure out how to do the split.
@@ -341,7 +341,7 @@ then $\omega : \Omega$ (and $v : A$).
 - A: Yes, that is true, but then we can't prove that using induction since termination is a stronger property.
 
 - Q: Don't we use the evaluation as a precondition now and thus can't catch stuckness?
-- A: Yes, this is no longer type soundness. We will use a different approach next lecture?
+- A: Yes, this is no longer type soundness. We will use a different approach next lecture.
 
 - Q: Can you explain what $\eta : G$ means?
 - A: $\eta$ is a map from variables to values. If the variable has type $A$ in $G$, then the value has type $A$ in $\eta$.
@@ -460,7 +460,7 @@ A, B \coloneqq 1 \mid A \otimes B \mid A \oplus B
 In linear logic, there is one more operator: "of course A", written $!A$.
 This allows us to reuse assumptions. We can model an ordinary function $A => B$,
 as $!A -o B$ (we will introduce this formally later). Then we have judgements of
-the form $\Sigma; G |- e : A$, where $\Sigma$ ahs reused hypothesis and $G$ is linear.
+the form $\Sigma; G |- e : A$, where $\Sigma$ has reused hypothesis and $G$ is linear.
 The full syntax is:
 
 ~ mathpre
@@ -535,7 +535,7 @@ You can not pattern-match against a lambda expression. This is a fundamental dis
 
 ### Lazy pairs
 
-You can not match on take a function and match on it.. instead you can only apply it and see what happens. Based on this, what do you think the elements of the $A \& B$ type should be?
+You can not match on take a function and match on it. Instead you can only apply it and see what happens. Based on this, what do you think the elements of the $A \& B$ type should be?
 Let's look at the logical rule:
 
 ~ infer
@@ -567,7 +567,7 @@ G |- B
 ~ end column
 ~ end columns
 
-We can only extra one of them! This is similar to the match-construct for sums.
+We can only extract one of them! This is similar to the match-construct for sums.
 In the programming language:
 
 ~ begin columns 
@@ -600,7 +600,7 @@ G |- e.\pi_2 : B
 ~ end column
 ~ end columns
 
-This is a _lazy pair_, we don't evaluate the components when constructing the pair. We can only 
+This is a _lazy pair_: we don't evaluate the components when constructing the pair. We can only
 evaluate one of them when we deconstruct the pair.
 We can generalize this to $\&\{ l : A_l \}_{l \in L}$.
 
