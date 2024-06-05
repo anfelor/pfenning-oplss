@@ -10,7 +10,7 @@ Todo        : True
 Tight       : False
 
 Title       : Adjoint Functional Programming
-Title Note  : Lecture notes for Frank Pfennings course at OPLSS 2024
+Title Note  : Lecture notes for Frank Pfenning's lecture at OPLSS 2024
 Short Title : &Title;
 
 Bibliography    : pfenning.bib

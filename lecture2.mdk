@@ -54,7 +54,7 @@ prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
 ~
 
 ~ begin abstract
-These are the lecture notes for Frank Pfenning's course at OPLSS 2024.
+These are the lecture notes for Frank Pfenning's lecture at OPLSS 2024.
 &bigskip;
 ~ end abstract
 
