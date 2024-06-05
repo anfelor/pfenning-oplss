@@ -1,0 +1,308 @@
+[INCLUDE=style/acmart]
+
+Extended    : False
+
+Anon        : False
+TechReport  : True
+Logo        : False
+Submit      : False
+Todo        : True
+Tight       : False
+
+Title       : Adjoint Functional Programming
+Title Note  : Lecture notes for Frank Pfennings course at OPLSS 2024
+Short Title : &Title;
+
+Bibliography    : pfenning.bib
+Math Dpi        : 300
+Math Concurrency: 8
+xPackage         : trfrac
+Package         : graphicx
+Embed           : 1000
+
+prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
+
+.supplement {
+  replace: "&source;"
+}
+
+.tronly {
+  display:none;
+}
+
+@techreport .tronly {
+  display:block;
+}
+
+@submit .supplement {
+  replace: clear;
+  replace: "&source; in the tech report"
+}
+
+.intro1 {
+  display: none;
+}
+
+[INCLUDE=borrowing-style]
+[INCLUDE=koka-style]
+[INCLUDE=graphdefs]
+[INCLUDE=graphlegend]
+
+
+~ HtmlOnly
+[TITLE]
+~
+
+~ begin abstract
+These are the lecture notes for Frank Pfenning's lecture at OPLSS 2024.
+&bigskip;
+~ end abstract
+
+~TexRaw
+\author{Nicholas Coltharp}
+\author{Anton Lorenzen}
+\author{Wesley Nuzzo}
+\author{Xiaotian Zhou}
+
+\title{\mdtitle}
+\maketitle
+\def\shorttitle{\acmshorttitle}
+~
+
+~ tronly
+~~ texraw
+\makeatletter
+\fancypagestyle{firstpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\fancypagestyle{standardpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\makeatother
+\pagestyle{standardpagestyle}
+~~
+~
+
+~ MathDefs
+\newcommand{\gray}[1]{\colorbox{gainsboro}{\strut$#1$}}
+\newcommand{\tr}[1]{\lfloor #1\rfloor}
+\newcommand{\comm}{\mathbin{\triangleright}}
+
+\newcommand\under[2]{\underset{\raisebox{2mm}{$\scriptstyle #2$}}{#1}}
+\newcommand\inhx[2]{\under{#1}{\under{\uparrow}{#2}}}
+\newcommand\synx[2]{\under{#1}{\under{\downarrow}{#2}}}
+\newcommand\inh[1]{\under{#1}{\uparrow}}
+\newcommand\syn[1]{\under{#1}{\downarrow}}
+\newcommand\smallsquare{\mathbin{\vcenter{\hbox{\scalebox{0.7}{$\square$}}}}}
+\newcommand\smallat{{\mkern 1mu\vcenter{\hbox{\scalebox{0.7}{@}}}\mkern-1mu}}
+\newcommand{\up}[1]{\lceil #1\rceil}
+~
+
+&bignegskip;
+
+&bignegskip;
+
+&bignegskip;
+
+# Lecture 3: Adjoint Types (& Nodes)
+
+Switching presentation and talk about adjoint types first,
+connect to the modal work in OCaml.
+We can use adjoint types to model the linear mode of that work.
+Not in SNAX: stack allocation, because we have not found the right logic yet.
+
+TODO: what did he say on uniqueness types?
+
+ - Negation
+ - Mixing linear & non-linear programming
+ - Mode checking & inference
+
+## Programming
+
+```
+type nat = +{'zero : 1, 'succ : nat}
+
+type list = +{'nil : 1, 'cons : nat * list}
+
+decl map (f : nat -> nat) (xs : list) : list
+defn map f xs = match xs with
+  | 'nil() => 'nil()
+  | 'cons(x, xs) => 'cons(f x, map f xs)
+```
+
+This `map` function should not compile: we don't use `f` in the `nil` branch
+and use it twice in the `cons` branch.
+
+```
+     U
+A         S
+     L
+```
+
+ - `U` is _unrestricted_.
+ - `A` is _affine_ (used at most once).
+ - `S` is _strict_ (used at least once).
+ - `L` is _linear_ (used exactly once).
+
+Our `map` example checks if we assume the `U` mode as default.
+Before we introduce non-linear values logically, though,
+we will use iterators:
+
+```
+type iterator = &{'next : nat -> nat * iterator,
+                  'done : 1}
+
+decl iterate (iter : iterator) (xs : list) : list
+defn iterate iter xs = match xs with
+  | 'nil() => (match iter.'done with | () => 'nil())
+  | 'cons(x, xs) => (match iter.'next(x) with | (y, iter) =>
+                       'cons('succ y, iterate iter xs))
+```
+
+We would have the same problem with `iterate` if we generalized `'succ` to an arbitrary function $f$.
+
+## Types
+
+We parameterize types by modes:
+
+~ mathpre
+A_m, B_m &\coloneqq 1 \mid A_m \otimes B_m \mid +\{ l : A_m^l \}_{l \in L} \mid \downarrow^k_m A_k (k \geq m)
+     &\mid A_m -o B_m \mid \&\{ l : A_m^l \}_{l \in L} \mid \uparrow^m_i A_i (i \leq m)
+~
+
+Remember: the first row is _positive_ and the second row is _negative_.
+We add shift operators to the types to change modes.
+Shifting down moves us down in the lattice and up-shift moves up.
+
+We can use a type variable `k` for modes:
+```
+type nat[k] = +{'zero : 1, 'succ : nat[k]}
+```
+
+This allows `k` at each mode.
+
+For recursive types, we need to _guard_ the modes. The reason for this is the runtime layout:
+
+```
+nil: 
+
+cons: (pointer to element) (pointer to tail)
+```
+
+But we would inline `cons` and might need infinite space. So we need:
+```
+type nat[k] = +{'zero : 1, 'succ : down[k] nat[k]}
+```
+
+In ordinary functional programming the downshift means "pointer" or "box".
+So we can be explicit about data layout.
+
+We can use a different mode parameter for the elements of the list:
+```
+type list[m k] = +{'nil : 1, 'cons : down[k] nat[k] * down[m] list[m k]}
+```
+
+This imposes an constraint that `m <= k`.
+
+ - Q: How is that ensured?
+ - A: This is part of the typing rules for `down`. The outer `m` in the `list` type
+     gives the mode of the term. The first mode index is special:
+     it is the mode of the whole list.
+
+This is necessary, since you can
+not have an unrestricted list of linear elements.
+However, it is super useful to have a `linear` list where the elements are non-linear.
+
+ - Q: Is `down[k]` a pointer or a shift in modes?
+ - A: Both! The two ends of a pointer might not have the same mode, but they might well have.
+
+Let's fix the `map` example:
+
+```
+decl map (f : [mf] up[k] (nat[k] -> nat[k])) (xs : list[m k]) : list[m k]
+defn map f xs = match xs with
+  | 'nil() => 'nil()
+  | 'cons(<x>, <xs>) => 'cons(<f.force x>, <map f xs>)
+```
+
+This fails: we need to shift `f` down to the mode of the elements of the list.
+
+TODO: type signature of `map`
+
+We can define modes as a preorder:
+
+```
+mode U structural :> S A L
+mode S strict :> L
+mode A affine :> L
+mode L linear
+```
+
+Then we can write:
+
+```
+decl map (f : [U] up[L] (nat[L] -> nat[L])) (xs : list[L L]) : list[L L]
+defn map f xs = match xs with
+  | 'nil() => 'nil()
+  | 'cons(<x>, <xs>) => 'cons(<f.force x>, <map f xs>)
+```
+
+Other types:
+
+```
+decl map (f : [U] up[L] (nat[L] -> nat[L])) (xs : list[L L]) : list[L L]
+decl map (f : [U] up[A] (nat[A] -> nat[A])) (xs : list[A A]) : list[A A]
+decl map (f : [U] up[U] (nat[U] -> nat[U])) (xs : list[U U]) : list[L U]
+```
+
+The last line is fine, since we construct a new list, which can only be used linearly.
+
+ - Q: Why do we need a partial order between modes?
+ - A: We can define $!A$ as $\downarrow^U_L \uparrow^U_L A_L$
+
+Unlike in OCaml, we can actually do mode polymorphism.
+
+ - Q: Does the compiler actually accept the last line? Because it seems to instantiate `m` with both `L` and `U`.
+ - A: Yes, that is a bug. We should have said:
+
+```
+decl map (f : [mf] up[k] (nat[k] -> nat[k])) (xs : list[m k]) : list[r k]
+```
+
+ - Q: Can you infer polymorphic modes?
+ - A: TODO, didn't catch this
+
+ - Q: Why is it better to use up- and down-shifts than use bang?
+ - A: Because with bang you basically write a linear program and you always have to deconstruct it all the time.
+
+ - Q: Can you make these different `k`s?
+ - A: Yes, but then you would need another up-shift or down-shift.
+
+TODO: Frank said something about top-level functions.
+
+~ mathpre
+G |- e : A
+~
+
+~ mathpre
+f : A[G]
+~
+
+~ mathpre
+G \geq m
+~
+
+~ infer
+G \geq k \quad G |- e : A_k
+-----------------------------
+D_W, G |- <e> : \downarrow^k_m A_k
+~
+
+~ infer
+D |- e : \downarrow_m^k A_k \quad G, x : A_k |- e' : C_r
+-----------------------------
+D,G |- @match e @with <x> => e' : C_r
+~
+

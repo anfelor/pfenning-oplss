@@ -477,7 +477,7 @@ A, B &\coloneqq 1 \mid A \otimes B \mid A \oplus B
      &\mid !A
 ~
 
-The first row is "positive" and the second row is "negative".
+The first row is _positive_ and the second row is _negative_.
 The first row can be duplicated by copying, eg. $1 \oplus 1 |- (1 \oplus 1) \otimes (1 \oplus 1)$,
 where we duplicate the boolean $1 \oplus 1$.
 
