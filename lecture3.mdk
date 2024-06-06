@@ -266,11 +266,8 @@ decl map (f : [U] up[U] (nat[U] -> nat[U])) (xs : list[U U]) : list[L U]
 The last line is fine, since we construct a new list, which can only be used linearly.
 
  - Q: Does the compiler actually accept the last line? Because it seems to instantiate `m` with both `L` and `U`.
- - A: Yes, that is a bug. We should have said:
+ - A: Yes, this is actually not a bug. The first type we gave restricted the output list of the same mode as the input list. That checks. The last type we gave allows the output mode to be different from the input mode.  That also checks. The fact that the last is not an instance of the first is perfectly okay, because the function definition is checked separately against each type.
 
-```
-decl map (f : [mf] up[k] (nat[k] -> nat[k])) (xs : list[m k]) : list[r k]
-```
 
 <!--
  - Q: Can you infer polymorphic modes?
