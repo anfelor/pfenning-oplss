@@ -1,0 +1,547 @@
+[INCLUDE=style/acmart]
+
+Extended    : False
+
+Anon        : False
+TechReport  : True
+Logo        : False
+Submit      : False
+Todo        : True
+Tight       : False
+
+Title       : Adjoint Functional Programming
+Title Note  : Lecture notes for Frank Pfennings course at OPLSS 2024
+Short Title : &Title;
+
+Bibliography    : pfenning.bib
+Math Dpi        : 300
+Math Concurrency: 8
+xPackage         : trfrac
+Package         : graphicx
+Package         : tikz
+Embed           : 1000
+
+prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
+
+.supplement {
+  replace: "&source;"
+}
+
+.tronly {
+  display:none;
+}
+
+@techreport .tronly {
+  display:block;
+}
+
+@submit .supplement {
+  replace: clear;
+  replace: "&source; in the tech report"
+}
+
+.intro1 {
+  display: none;
+}
+
+[INCLUDE=borrowing-style]
+[INCLUDE=koka-style]
+[INCLUDE=graphdefs]
+[INCLUDE=graphlegend]
+
+
+~ HtmlOnly
+[TITLE]
+~
+
+~ begin abstract
+These are the lecture notes for Frank Pfenning's lecture at OPLSS 2024.
+&bigskip;
+~ end abstract
+
+~TexRaw
+\author{Nicholas Coltharp}
+\author{Anton Lorenzen}
+\author{Wesley Nuzzo}
+\author{Xiaotian Zhou}
+
+\title{\mdtitle}
+\maketitle
+\def\shorttitle{\acmshorttitle}
+~
+
+~ tronly
+~~ texraw
+\makeatletter
+\fancypagestyle{firstpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\fancypagestyle{standardpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\makeatother
+\pagestyle{standardpagestyle}
+~~
+~
+
+~ MathDefs
+\newcommand{\gray}[1]{\colorbox{gainsboro}{\strut$#1$}}
+\newcommand{\tr}[1]{\lfloor #1\rfloor}
+\newcommand{\comm}{\mathbin{\triangleright}}
+
+\newcommand\under[2]{\underset{\raisebox{2mm}{$\scriptstyle #2$}}{#1}}
+\newcommand\inhx[2]{\under{#1}{\under{\uparrow}{#2}}}
+\newcommand\synx[2]{\under{#1}{\under{\downarrow}{#2}}}
+\newcommand\inh[1]{\under{#1}{\uparrow}}
+\newcommand\syn[1]{\under{#1}{\downarrow}}
+\newcommand\smallsquare{\mathbin{\vcenter{\hbox{\scalebox{0.7}{$\square$}}}}}
+\newcommand\smallat{{\mkern 1mu\vcenter{\hbox{\scalebox{0.7}{@}}}\mkern-1mu}}
+\newcommand{\up}[1]{\lceil #1\rceil}
+~
+
+&bignegskip;
+
+&bignegskip;
+
+&bignegskip;
+
+# Lecture 4: Semi-Axiomatic Sequent Calculus (SAX)
+
+First, some recap and remarks from last lecture:
+
+~ mathpre
+A_m, B_m &\coloneqq 1_m \mid A_m \times B_m \mid +\{ l : A_l \}_{l \in L} \mid \downarrow^k_m A_k (k \geq m)
+     &\mid A_m -> B_m \mid \&\{ l : A_l \}_{l \in L} \mid \uparrow^m_i A_i (i \leq m)
+~
+
+### Comparison to OCaml
+
+They have modes not in here like stack allocation.
+
+Can you use linear resources to construct something unrestricted:
+
+~ mathpre
+f : A_L -> B_L, x : A_L |- C_U
+~
+
+No, since our judgement is:
+
+~ mathpre
+G |- e : A_m @presupposes G \geq m
+~
+
+Instead, you can construct something inside a `down` constructor.
+That unlocks the elements from your context that you can to use.
+Eg. write `match f x with down ...` in this case.
+
+### Other Logics
+
+We can model linear logic (with just $U > L$) as: $!A = \downarrow^U_L \uparrow^U_L A$.
+Our calculus generalizes LNL Benton '95.
+
+We can also model other logics such as $@IS_4$, where $V > T$ as: $\boxempty A = \downarrow^V_T \uparrow^V_T A$.
+This is a _comonad_.
+You can also do monadic programming by having two modes $T > L$ as: $\circ A = \uparrow^T_L \downarrow^T_L A$.
+This is a (strong) _monad_.
+
+In practice, we only use a fragment of the expressive power.
+You can also model proof irrelevance; not all modes have to do with
+linearity.
+
+ - *Q:* What is contraction? What is weakening?
+ - *A:* Contraction is a proof theoretic term for assumptions that can be duplicated. Weakening is a proof theoretic term for assumptions that can be forgotten. In SNAX, `strict` values can not be forgotten, `affine` values can not be duplicated, `linear` values can not be duplicated or forgotten.
+
+ - *Q:* If you have non-linear values, do you need a garbage collector?
+ - *A:* Yes, but this is not yet implemented.
+
+## Explicating Store
+
+Normally: separation logic. But we want to give a more higher level view.
+
+TODO: picture 1
+
+How do we lay this out in a programming language?
+
+Using addresses $a,b$, we can lay this out in the store as:
+
+~ mathpre
+( a, b ) : A \times B
+~
+
+~ infer
+\quad
+----------------------------------
+a : A, b : B |- (a, b) : A \times B
+~
+
+~ infer
+\quad
+----------------------------------
+\cdot |- () : 1
+~
+
+~ infer
+k \in L
+----------------------------------
+a : A_k |- k(a) : +\{ l : A_l \}_{l \in L}
+~
+
+Logically:
+
+~ infer
+\quad
+----------------------------------
+A, B |- A \times B
+~
+
+~ infer
+\quad
+----------------------------------
+\cdot |- 1
+~
+
+~ infer
+\quad
+----------------------------------
+A |- A \oplus B
+~
+
+~ infer
+\quad
+----------------------------------
+B |- A \oplus B
+~
+
+The shifts will come later, but they turn out not be terribly interesting.
+
+We can design one half as axioms, but we need to design the other half as rules.
+
+Here we read from memory now.
+
+~ infer
+G, x : A, y : B |- P : \gamma
+----------------------------------
+G, c : A \times B |- @read c ((x, y) => P) : \gamma
+~
+
+What does that mean logically?
+
+~ infer
+A, B |- C
+----------------------------------
+A \otimes B |- C
+~
+
+This makes sense, even if you don't think about memory.
+
+~ infer
+G |- P : \gamma
+----------------------------------
+G, c : 1 |- @read c (() => P) : \gamma
+~
+
+~ infer
+G, x : A_l |- P_l : \gamma \quad \forall l \in L
+----------------------------------
+G, c : +\{ l : A_l \}_{l \in L} |- @read c (l(x) => P_l) : \gamma
+~
+
+Logically, if I have:
+
+~ infer
+G, A, B |- C
+----------------------------------
+G, A \times B |- C
+~
+
+~ infer
+G, A |- C \quad G, B |- C
+----------------------------------
+G, A \oplus B |- C
+~
+
+~ infer
+G |- C
+----------------------------------
+G, 1 |- C
+~
+
+## SAX
+
+How do we interpret this judgement?
+
+~ mathpre
+G |- P : \gamma
+~
+
+The elements of $G$ are addresses and the program $P$ can read from it.
+There are two rules in sequent calculus: identity and cut.
+Logically:
+
+~ infer
+D |- A \quad G,A |- C
+----------------------------------
+D, G |- C
+~
+
+ - *Q*: Does this become trivially, since we have replaced half the rules by axioms?
+ - *A*: No.
+
+What is that computationally?
+
+~ infer
+D |- P :: (x : A) \quad G, x : A |- Q :: (c : C)
+----------------------------------
+D, G |- @cut_A x P; Q :: C
+~
+
+`P` has to write into `x`. Each program returns a destination that it writes into.
+
+~ infer
+\quad
+--------
+A |- A
+~
+
+In programming terms, this is a move from `b` to `a`:
+
+~ infer
+\quad
+--------
+b : A |- @id a : A
+~
+
+ - *Q*: What does the colon mean?
+ - *A*: Just syntax since there is also another colon for the address.
+
+ - *Q*: Is the `cut` a let-binding?
+ - *A*: Yes, but it writes to the destination instead of returning a value.
+
+If we use destinations, we need to change the pair rule.
+But how do we write into the destination?
+
+~ infer
+\quad
+----------------------------------
+a : A, b : B |- @write c (a, b) :: (c : A \times B)
+~
+
+~ infer
+\quad
+----------------------------------
+\cdot |- @write c () :: (c : 1)
+~
+
+~ infer
+k \in L
+----------------------------------
+a : A_k |- @write c (k(a)) :: (c : +\{ l : A_l \}_{l \in L})
+~
+
+The whole language is now explicit, even though logically it is just a simple sequent calculus.
+Our complete syntax is for programs:
+
+~ mathpre
+P &\coloneqq @write d V
+  &\mid @read d K
+  &\mid @id a b
+  &\mid @cut x P; Q
+~
+
+Values:
+
+~ mathpre
+V &\coloneqq () | (a, b) | k(a)
+~
+
+Continuations:
+
+~ mathpre
+K &\coloneqq () => P | (x, y) => P | (l(x) => P_l)_{l \in L}
+~
+
+ - *Q:* What makes these rules a sequent calculus vs natural deduction?
+ - *A*: Because you can use variables from the context directly.
+
+ - *Q:* Are you going to talk about how the negatives work?
+ - *A:* Yes, but maybe tomorrow.
+
+## Compiler
+
+The compiler translates from natural deduction to sequent calculus -- this is a proof-theoretic question!
+We compile:
+
+~ mathpre
+G |- e : A
+~
+
+into an expression that writes into a new destination $d$:
+
+~ mathpre
+G |- [[e]]d :: (d : A)
+~
+
+Let's say we translate pairs:
+
+~ mathpre
+[[(e1, e2)]]d = & @cut d_1 [[e1]]d_1;
+                & @cut d_2 [[e2]]d_2;
+                & @write d (d_1, d_2)
+~
+
+How do I compile a match?
+
+~ mathpre
+[[ match e with ((x, y) => e') ]]d' = & @cut d [[e]]d
+                                      & @read d ((x, y) => [[e']]d')
+~
+
+How do I compile a variable?
+
+~ mathpre
+[[x]]d = @id d x
+~
+
+ - *Q:* What does this buy us?
+ - *A:* We can very easily compile this program to C.
+
+ - *Q:* Can there be superfluous moves?
+ - *A*: Yes! The compiler has two optimizations for this:
+
+~ mathpre
+@cut x (@id x y); Q(x) = Q(y)
+~
+
+This is a logical rule: Cut and identity are opposites!
+And you can also reuse reads that you have read before.
+
+ - *Q:* Does linearity make it easier to convert to SSA?
+ - *A:* Maybe? We leave this to C here, even if it does not know about linearity.
+
+ - *Q:* Is `x` in the translation already allocated?
+ - *A:* Yes, the variables of the source language become the addresses of the target language.
+
+ - *Q:* Would you have to change the rules if you want to change the data-layout?
+ - *A:* Yes, next lecture!
+
+ - *Q:* Do you want to do cut-elimination?
+ - *A:* For linear values, this would be free, but for non-linear values it might explode the size of the code.
+
+## In Action
+
+We continue with live coding:
+
+```
+type bin[m] = +{'b0 : <bin[m]>, 'b1 : <bin[m]>, 'e : 1}
+
+decl inc (x : bin[m]) : bin[m]
+defn inc x = match x with
+  | 'b0 <x> => 'b1 <x>
+  | 'b1 <x> => 'b0 <inc x>
+  | 'e() => 'b1 <'e()>
+
+mode L linear
+
+inst inc (x : bin[L]) : bin[L]
+```
+
+Let's look at how this is compiled:
+
+```
+proc inc/0($0:bin[L]) (x:bin[L]) =
+  read x =>
+  | 'b0($1) =>
+    read $1 <$2> =>
+    cut $3:down[L] bin[L]
+        write $3 <$2>
+    write $0 'b1($3)
+  | 'b1($5) =>
+    read $5 <$6> =>
+    cut $7:down[L] bin[L]
+      cut $8:bin[L]
+        call inc/0 $8 $6
+      write $7 <$8>
+    write $0 'b0($7)
+  | 'e($11) => ...
+```
+
+But this is without the reuse optimization!
+With that, we get:
+
+```
+proc inc/0($0:bin[L]) (x:bin[L]) =
+  read x =>
+  | 'b0($1) =>
+    read $1 <$2> =>
+    cut $3 = $1 : down[L] bin[L] % reuse
+      write $3 <$2>
+    write $0 'b1($3)
+  | 'b1($5) =>
+    read $5 <$6> =>
+    cut $7 = $5 : down[L] bin[L] % reuse
+      cut $8 = x : bin[L] % reuse
+        call inc/0 $8 $6
+      write $7 <$8>
+    write $0 'b0($7)
+  | 'e($11) => ...
+```
+
+This is the general purpose idea, that in linear logic you can reuse the memory. Nothing fancy here.
+One of Frank's students proved the correctness of that optimization in their senior thesis.
+
+We continued to look at the generated C code.
+
+We want to improve our implementation. TODO: what was the motivation exactly?
+
+```
+type bin[m] = +{'b0 : <bin[m]>, 'b1 : <bin[m]>, 'e : 1}
+
+type std[m] = +{'b0 : <pos[m]>, 'b1 : <std[m]>, 'e : 1}
+type pos[m] = +{'b0 : <pos[m]>, 'b1 : <std[m]>        }
+```
+
+We can give another type signature to `inc`:
+
+```
+decl inc (x : bin[m]) : bin[m]
+decl inc (x : std[m]) : pos[m]
+
+defn inc x = match x with
+  | 'b0 <x> => 'b1 <x>
+  | 'b1 <x> => 'b0 <inc x>
+  | 'e()    => 'b1 <'e()>
+```
+
+This is super cool: We can give multiple types to a function!
+We can also implement decrement:
+
+```
+decl dec (x : bin[m]) : bin[m]
+decl dec (x : pos[m]) : bin[m]
+defn dec x = match x with
+  | 'b0 <x> => 'b1 <dec x>
+  | 'b1 <x> => 'b0 <x>
+  | 'e()    => 'e()
+```
+
+But we can not give the signature:
+
+```
+decl dec (x : std[m]) : std[m]
+```
+
+since in the `'b0` case we would have to turn a `std` into a `pos`.
+Another possible implementation:
+
+```
+decl dec (x : std[m]) : std[m]
+defn dec x = match x with
+  | 'b0 <x> => 'b1 <dec x>
+  | 'b1 <'e()> => 'e()
+  | 'b1 <'b0 <x>> => 'b0 <'b0 <x>>
+  | 'b1 <'b1 <x>> => 'b0 <'b1 <x>>
+  | 'e() => 'e()
+```
+
