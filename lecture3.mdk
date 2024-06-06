@@ -107,7 +107,7 @@ These are the lecture notes for Frank Pfenning's lecture at OPLSS 2024.
 
 &bignegskip;
 
-# Lecture 3: Adjoint Types (& Nodes)
+# Lecture 3: Adjoint Types (& Modes)
 
 Since there was an evening lecture on modes in OCaml yesterday,
 we will switch up the lectures and talk about adjoint types first.
