@@ -138,7 +138,7 @@ Eg. write `match f x with down ...` in this case.
 ### Other Logics
 
 We can model linear logic (with just $U > L$) as: $!A = \downarrow^U_L \uparrow^U_L A$.
-Our calculus generalizes LNL [Benton '95](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=cbe2fb660d3a631fe9a86cdfa458582ba656183f).
+Our calculus generalizes LNL [Benton '95](https://link.springer.com/chapter/10.1007/bfb0022251).
 
 We can also model other logics such as $@IS_4$, where $V > T$ as: $\boxempty A = \downarrow^V_T \uparrow^V_T A$.
 This is a _comonad_.
