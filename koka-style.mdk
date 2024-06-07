@@ -183,6 +183,7 @@ mathpre {
            //<<</\llangle{}\
            //>>>/\rrangle{}\
            //<>/\total{}\
+           //<([a-z])>/\,<\!\!\1\!\!>\;\
            //\.([ij]\d?)\s*>>/\smallat{\1}\mkern2#mu\rangle{}\
            //<<(?!-)/\langle\mkern1#mu{}\
            //>>/\mkern2#mu\rangle{}\

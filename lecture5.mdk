@@ -145,7 +145,7 @@ Continuations:
 K & \coloneqq (x, y) => P
   & \mid () => P
   & \mid (l(x) => P_l)_{l \in L}
-  & \mid <x> => P
+  & \mid <x>\,=> P
 ~
 
 ~ end column
@@ -191,15 +191,14 @@ since we assume that everything is linear here.
 (a, b) \triangleright ((x, y) => P(x, y)) = P(a, b)
 () \triangleright (() => P) = P
 k(a) \triangleright (l(x) => P_l(x))_{l \in L} = P_k(a)
-<a> \triangleright (<x> => P(x)) = P(a)
+<a> \triangleright (<x>\, => P(x)) = P(a)
 ~
 
  - *Q:* Why is this substructural?
- - *A:* Since you can read the rules in logical form, where `;` is the linear conjunction
-     and `->` is a linear function arrow.
+ - *A:* Since you can read the rules in logical form, where $,$ is the linear conjunction
+     and $->$ is a linear function arrow.
 
 Let's consider functions:
-
 ~ infer
 G, A |- B
 ----------------
@@ -207,7 +206,6 @@ G |- A -o B
 ~
 
 How would we interpret this in the store rules?
-
 ~ infer
 G, x : A |- P  :: (y : B)
 ----------------
@@ -215,7 +213,6 @@ G |- @write c ((x, y) => P) :: (c: A -o B)
 ~
 
 The axiom for the usual left-rule of functions is:
-
 ~ infer
 \quad
 ----------------
@@ -231,7 +228,6 @@ a : A, c : A -o B |- @read c (a, b) :: (b : B)
 We pass $(a,b)$ to the continuation in the cell $c$.
 To achieve this, we say that a store variable is either
 a value or a continuation:
-
 ~ mathpre
 S \coloneqq V \mid K
 ~
@@ -295,11 +291,17 @@ It happens not to be too important, because it is not inhabited.
 
 Logical rules for the lazy record:
 
+~ begin columns 
+~ begin column { width:40%; }
+
 ~ infer
 G |- A \quad G |- B
 ----------------
 G |- A \& B
 ~
+
+~ end column
+~ begin column { width:30%; }
 
 ~ infer
 \quad
@@ -307,11 +309,17 @@ G |- A \& B
 A \& B |- A
 ~
 
+~ end column
+~ begin column
+
 ~ infer
 \quad
 ----------------
 A \& B |- B
 ~
+
+~ end column
+~ end columns
 
 Process rules:
 
@@ -357,17 +365,17 @@ How can we derive the associativity of $\otimes$?
 It turns out that we need a cut rule somewhere:
 
 ~ mathpre
-A, B |- A \otimes B \quad A \otimes B, C |- (A \otimes B) \otimes C
-\hline
-A, B, C |- (A \otimes B) \otimes C
-\hline
-A, B \otimes B |- (A \otimes B) \otimes C
-\hline
+\underline{A, B |- A \otimes B \quad A \otimes B, C |- (A \otimes B) \otimes C}
+\underline{A, B, C |- (A \otimes B) \otimes C}
+\underline{A, B \otimes B |- (A \otimes B) \otimes C}
 A \otimes (B \otimes C) |- (A \otimes B) \otimes C
 ~
 
 So we can not have cut-elimination. So how can we recover?
 Use _snips_ instead of cuts. We mark subformulas by an underline:
+
+~ begin columns 
+~ begin column { width:60%; }
 
 ~ infer
 \quad
@@ -381,11 +389,8 @@ Use _snips_ instead of cuts. We mark subformulas by an underline:
 \underline{A} |- A \oplus B
 ~
 
-~ infer
-\quad
-----------------
-\underline{B} |- A \oplus B
-~
+~ end column
+~ begin column
 
 ~ infer
 \quad
@@ -393,7 +398,16 @@ Use _snips_ instead of cuts. We mark subformulas by an underline:
 \cdot\, |- 1
 ~
 
-The snip rule:
+~ infer
+\quad
+----------------
+\underline{B} |- A \oplus B
+~
+
+~ end column
+~ end columns
+
+The snip rule is:
 
 ~ infer
 D |- A \quad G, \underline{A} |- C
@@ -409,7 +423,7 @@ Then, instead of allocating:
 a : \underline{A}, b : \underline{B} |- @write c (a, b) :: (c : A \otimes B)
 ~
 
-We can just write the addresses. This performs no computation at runtime.
+... we can just write the addresses. This performs no computation at runtime:
 
 ~ infer
 \quad
@@ -419,8 +433,10 @@ c.\pi_1 : A, c.\pi_2 : B |- @write c (\_, \_) :: (c : A \otimes B)
 
 Snips correspond to address computation and cuts correspond to allocation.
 When you have a subformula, then you can compute the address of the subformula.
-
 For the application rule:
+
+~ begin columns
+~ begin column { width:60%; }
 
 ~ infer
 \quad
@@ -428,11 +444,17 @@ For the application rule:
 \underline{A}, A -> B |- \underline{B}
 ~
 
+~ end column
+~ begin column
+
 ~ infer
 \quad
 ----------------
 A \& B |- \underline{A}
 ~
+
+~ end column
+~ end columns
 
 This determines a calling convention for functions.
 This happens to be a good way to represent lambdas.
