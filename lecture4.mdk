@@ -118,15 +118,14 @@ A_m, B_m &\coloneqq 1_m \mid A_m \times B_m \mid +\{ l : A_l \}_{l \in L} \mid \
 
 ### Comparison to OCaml
 
-They have modes not in here like stack allocation.
-
-Can you use linear resources to construct something unrestricted:
+The new work on OCaml has modes not in SNAX like stack allocation.
+A question last time was whether you can use linear resources to construct something unrestricted:
 
 ~ mathpre
 f : A_L -> B_L, x : A_L |- C_U
 ~
 
-No, since our judgement is:
+You can not, since our judgement is:
 
 ~ mathpre
 G |- e : A_m @presupposes G \geq m
@@ -139,7 +138,7 @@ Eg. write `match f x with down ...` in this case.
 ### Other Logics
 
 We can model linear logic (with just $U > L$) as: $!A = \downarrow^U_L \uparrow^U_L A$.
-Our calculus generalizes LNL Benton '95.
+Our calculus generalizes LNL [Benton '95](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=cbe2fb660d3a631fe9a86cdfa458582ba656183f).
 
 We can also model other logics such as $@IS_4$, where $V > T$ as: $\boxempty A = \downarrow^V_T \uparrow^V_T A$.
 This is a _comonad_.
@@ -158,17 +157,29 @@ linearity.
 
 ## Explicating Store
 
-Normally: separation logic. But we want to give a more higher level view.
+In this Section, we want to make the store explicit. Normally, you would use something
+like separation logic for this. However, we want to give a more higher level view.
+Our heap layout looks something like this:
 
-TODO: picture 1
+~ center
+![data-layout]
 
-How do we lay this out in a programming language?
+[data-layout]: data_layout_lecture4.jpeg { width:10cm; }
+~
 
+For example, a `Cons(1, list)` would be laid out by allocating a `Cons` constructor
+that points to a pair pointing to `1` and `list`.
+How do we describe this semantically?
 Using addresses $a,b$, we can lay this out in the store as:
 
 ~ mathpre
 ( a, b ) : A \times B
 ~
+
+Our rules for the store and the logical rules are respectively:
+
+~ begin columns 
+~ begin column { width:60%; }
 
 ~ infer
 \quad
@@ -179,7 +190,7 @@ a : A, b : B |- (a, b) : A \times B
 ~ infer
 \quad
 ----------------------------------
-\cdot |- () : 1
+\cdot\, |- () : 1
 ~
 
 ~ infer
@@ -188,7 +199,8 @@ k \in L
 a : A_k |- k(a) : +\{ l : A_l \}_{l \in L}
 ~
 
-Logically:
+~ end column
+~ begin column
 
 ~ infer
 \quad
@@ -199,7 +211,7 @@ A, B |- A \times B
 ~ infer
 \quad
 ----------------------------------
-\cdot |- 1
+\cdot\, |- 1
 ~
 
 ~ infer
@@ -214,11 +226,12 @@ A |- A \oplus B
 B |- A \oplus B
 ~
 
+~ end column
+~ end columns
+
 The shifts will come later, but they turn out not be terribly interesting.
-
 We can design one half as axioms, but we need to design the other half as rules.
-
-Here we read from memory now.
+For the elimination rule of pairs, we need to read from memory:
 
 ~ infer
 G, x : A, y : B |- P : \gamma
@@ -235,6 +248,16 @@ A \otimes B |- C
 ~
 
 This makes sense, even if you don't think about memory.
+Again, we can compare the store rules to the logical rules: 
+
+~ begin columns 
+~ begin column { width:60%; }
+
+~ infer
+G, x : A, y : B |- P : \gamma
+----------------------------------
+G, c : A \times B |- @read c ((x, y) => P) : \gamma
+~
 
 ~ infer
 G |- P : \gamma
@@ -248,7 +271,8 @@ G, x : A_l |- P_l : \gamma \quad \forall l \in L
 G, c : +\{ l : A_l \}_{l \in L} |- @read c (l(x) => P_l) : \gamma
 ~
 
-Logically, if I have:
+~ end column
+~ begin column
 
 ~ infer
 G, A, B |- C
@@ -257,16 +281,19 @@ G, A \times B |- C
 ~
 
 ~ infer
+G |- C
+----------------------------------
+G, 1 |- C
+~
+
+~ infer
 G, A |- C \quad G, B |- C
 ----------------------------------
 G, A \oplus B |- C
 ~
 
-~ infer
-G |- C
-----------------------------------
-G, 1 |- C
-~
+~ end column
+~ end columns
 
 ## SAX
 
@@ -313,7 +340,7 @@ In programming terms, this is a move from `b` to `a`:
 b : A |- @id a : A
 ~
 
- - *Q*: What does the colon mean?
+ - *Q*: What does the double colon mean?
  - *A*: Just syntax since there is also another colon for the address.
 
  - *Q*: Is the `cut` a let-binding?
@@ -331,7 +358,7 @@ a : A, b : B |- @write c (a, b) :: (c : A \times B)
 ~ infer
 \quad
 ----------------------------------
-\cdot |- @write c () :: (c : 1)
+\cdot\, |- @write c () :: (c : 1)
 ~
 
 ~ infer
@@ -362,11 +389,12 @@ Continuations:
 K &\coloneqq () => P | (x, y) => P | (l(x) => P_l)_{l \in L}
 ~
 
+<!--
  - *Q:* What makes these rules a sequent calculus vs natural deduction?
  - *A*: Because you can use variables from the context directly.
 
  - *Q:* Are you going to talk about how the negatives work?
- - *A:* Yes, but maybe tomorrow.
+ - *A:* Yes, but maybe tomorrow. -->
 
 ## Compiler
 
@@ -424,7 +452,7 @@ And you can also reuse reads that you have read before.
  - *A:* Yes, the variables of the source language become the addresses of the target language.
 
  - *Q:* Would you have to change the rules if you want to change the data-layout?
- - *A:* Yes, next lecture!
+ - *A:* Yes, this will be in the next lecture!
 
  - *Q:* Do you want to do cut-elimination?
  - *A:* For linear values, this would be free, but for non-linear values it might explode the size of the code.
@@ -491,9 +519,7 @@ proc inc/0($0:bin[L]) (x:bin[L]) =
 This is the general purpose idea, that in linear logic you can reuse the memory. Nothing fancy here.
 One of Frank's students proved the correctness of that optimization in their senior thesis.
 
-We continued to look at the generated C code.
-
-We want to improve our implementation. TODO: what was the motivation exactly?
+We want to improve our implementation:
 
 ```
 type bin[m] = +{'b0 : <bin[m]>, 'b1 : <bin[m]>, 'e : 1}
