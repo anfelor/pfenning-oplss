@@ -154,7 +154,10 @@ mathpre {
            //\brl(?![a-zA-Z])/\mathrm{l}\
            //\bpe(?![a-zA-Z])/{\pi}\
            //\beff(?![a-zA-Z])/{\epsilon}\
-           //\bnu(?![a-zA-Z])/\upsilon{}\
+           //\bmu([0-9ni])/\mu_{\1}\
+           //\bmu(?![a-zA-Z])/\mu{}\
+           //\bnu([0-9ni])/\nu_{\1}\
+           //\bnu(?![a-zA-Z])/\nu{}\
            //\bpr(?![a-zA-Z])/{\pi}\
            //\bprs(?![a-zA-Z])/\overline{\pi}\
            //\bexpr(?![a-zA-Z])/e\
@@ -189,6 +192,7 @@ mathpre {
            //\+\+/\appendop{}\
            //\bvv\b/\downarrow{}\
            //\bVV\b/\Downarrow{}\
+           //\@\@(?![a-zA-Z])/@\
           //g";
 }
 
