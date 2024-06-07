@@ -358,11 +358,11 @@ It turns out that we need a cut rule somewhere:
 
 ~ mathpre
 A, B |- A \otimes B \quad A \otimes B, C |- (A \otimes B) \otimes C
-
+\hline
 A, B, C |- (A \otimes B) \otimes C
-
+\hline
 A, B \otimes B |- (A \otimes B) \otimes C
-
+\hline
 A \otimes (B \otimes C) |- (A \otimes B) \otimes C
 ~
 
