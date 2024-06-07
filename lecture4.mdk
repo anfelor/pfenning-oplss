@@ -164,7 +164,7 @@ Our heap layout looks something like this:
 ~ center
 ![data-layout]
 
-[data-layout]: data_layout_lecture4.jpeg { width:10cm; }
+[data-layout]: data_layout_lec4_update.jpeg { width:10cm; }
 ~
 
 For example, a `Cons(1, list)` would be laid out by allocating a `Cons` constructor
