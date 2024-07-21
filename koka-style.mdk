@@ -117,6 +117,7 @@ mathpre {
            //\+\+/{+\!\!+}\
            //\[->\]/[->]\
            //->/{\rightarrow}\
+           //-o/{\multimap}\
            //<-/{\leftarrow}\
            //~>/{\;\rightsquigarrow\;}\
            //~~>/{\;\hookrightarrow}\;\
@@ -142,6 +143,7 @@ mathpre {
            //\ba(?![a-zA-Z\}])/\alpha{}\
            //\bbb(?![a-zA-Z])/\beta{}\
            //\bts(?![a-zA-Z])/\overline{\tau}\
+           //\bt([0-9])(?![a-zA-Z])/\tau_{\1}\
            //\bss(?![a-zA-Z])/{\overline\sigma}\
            //\bll([0-9])/@hnd^l_{\1}\
            //\bll(?![a-zA-Z])/@hnd^l\
@@ -154,9 +156,9 @@ mathpre {
            //\brl(?![a-zA-Z])/\mathrm{l}\
            //\bpe(?![a-zA-Z])/{\pi}\
            //\beff(?![a-zA-Z])/{\epsilon}\
-           //\bmu([0-9ni])/\mu_{\1}\
+           //\bmu([0-9ni])(?![a-zA-Z])/\mu_{\1}\
            //\bmu(?![a-zA-Z])/\mu{}\
-           //\bnu([0-9ni])/\nu_{\1}\
+           //\bnu([0-9ni])(?![a-zA-Z])/\nu_{\1}\
            //\bnu(?![a-zA-Z])/\nu{}\
            //\bpr(?![a-zA-Z])/{\pi}\
            //\bprs(?![a-zA-Z])/\overline{\pi}\
@@ -177,6 +179,7 @@ mathpre {
            // \| /\midbar{}\
            //:=/\coloneq{}\
            //:/\xcolon{}\
+           //<=>/\!\!\Leftrightarrow{}\!\
            //>>=/>>=\
            //>=/\geqslant{}\
            //<=/\leqslant{}\

@@ -1,0 +1,521 @@
+[INCLUDE=style/acmart]
+
+Extended    : False
+
+Anon        : False
+TechReport  : True
+Logo        : False
+Submit      : False
+Todo        : True
+Tight       : False
+
+Title       : Adjoints, Modes and Back
+Title Note  : Lecture notes for Frank Pfennings course at OPLSS 2024
+Short Title : &Title;
+
+Bibliography    : pfenning.bib
+Math Dpi        : 300
+Math Concurrency: 8
+xPackage         : trfrac
+Package         : graphicx
+Package         : tikz
+Package         : fontawesome
+Embed           : 1000
+
+prelinecorrection: [\setlength\preadjust{0.1em}]{input:texraw}
+
+.supplement {
+  replace: "&source;"
+}
+
+.tronly {
+  display:none;
+}
+
+@techreport .tronly {
+  display:block;
+}
+
+@submit .supplement {
+  replace: clear;
+  replace: "&source; in the tech report"
+}
+
+.intro1 {
+  display: none;
+}
+
+[INCLUDE=borrowing-style]
+[INCLUDE=koka-style]
+[INCLUDE=graphdefs]
+[INCLUDE=graphlegend]
+
+~ HtmlOnly
+[TITLE]
+~
+
+~ begin abstract
+We show a correspondence between Adjoint Natural Deduction and
+the new mode system proposed for OCaml.
+&bigskip;
+~ end abstract
+
+~TexRaw
+\author{Anton Lorenzen}
+\affiliation{
+  \institution{University of Edinburgh}
+  \city{Edinburgh}
+  \country{UK}
+}
+\email{anton.lorenzen@ed.ac.uk}
+
+\title{\mdtitle}
+\maketitle
+\def\shorttitle{\acmshorttitle}
+~
+
+~ tronly
+~~ texraw
+\makeatletter
+\fancypagestyle{firstpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\fancypagestyle{standardpagestyle}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+}
+\makeatother
+\pagestyle{standardpagestyle}
+~~
+~
+
+~ MathDefs
+\newcommand{\lock}{\tikz{\node[scale=1, line width=0pt, inner sep=0pt] at (0,0) {\faLock\,};}}
+\newcommand{\gray}[1]{\colorbox{gainsboro}{\strut$#1$}}
+\newcommand{\tr}[1]{\lfloor #1\rfloor}
+\newcommand{\comm}{\mathbin{\triangleright}}
+
+\newcommand\under[2]{\underset{\raisebox{2mm}{$\scriptstyle #2$}}{#1}}
+\newcommand\inhx[2]{\under{#1}{\under{\uparrow}{#2}}}
+\newcommand\synx[2]{\under{#1}{\under{\downarrow}{#2}}}
+\newcommand\inh[1]{\under{#1}{\uparrow}}
+\newcommand\syn[1]{\under{#1}{\downarrow}}
+\newcommand\smallsquare{\mathbin{\vcenter{\hbox{\scalebox{0.7}{$\square$}}}}}
+\newcommand\smallat{{\mkern 1mu\vcenter{\hbox{\scalebox{0.7}{@}}}\mkern-1mu}}
+\newcommand{\up}[1]{\lceil #1\rceil}
+~
+
+&bignegskip;
+
+&bignegskip;
+
+&smallnegskip;
+
+We compare the Mode Calculus (Figure 2 of @Lorenzen:oxidizing) to Adjoint Natural Deduction (Figure 3 of @Jang:adjoint).
+
+We show the correspondence just for one mode axis, where we have the two modes _affine_ $A$ and _unrestricted_ $U$
+corresponding to `many` and `once` in OCaml. Other modes are tricky, since they are either not available in
+Adjoint Natural Deduction (stack allocation, uniqueness) or not available in OCaml (strictness/relevance).
+We further exclude space credits $\clubsuit$ (and with it in-place reuse and borrowing) since these features
+are not available in Adjoint Natural Deduction and we exclude linear "with" $A \& B$ which is not available in OCaml.
+
+A major difference between the two calculi is their treatment of submoding. In the Mode Calculus, each term at mode
+`many` is also valid at mode `once` without any changes to its type. For example, given a list of elements at mode `many`,
+and an element at mode `once`, we can cons the element on the list and obtain a result list at mode `once`.
+In contrast, in the Adjoint Natural Deduction calculus, we need to explicitly downcast terms, which includes changing the type
+to a downshifted version of the original type. As far as I can tell, it would not be possible to write this example
+in the Adjoint Natural Deduction calculus. On the flipside, we could easily extend the Adjoint Natural Deduction calculus
+by types that only exist at certain modes.[^dual] In the Mode Calculus, each type is available at all modes (but we can restrict
+introduction forms to certain modes). Due to these differences, we will ignore the issue of submoding altogether.
+
+[^dual]: In Adjoint Natural Deduction, we already assume that $m >= k$ implies $\sigma(m) \supseteq \sigma(k)$.
+    We could strengthen this to an inclusion of type universes such that $m >= k$ and $x : A_m$ implies $x : A_k$.
+    This would then allow us to add a submoding rule to the calculus.
+    The categorical structure behind a calculus with separate type universes and submoding is a double category [@Tang:met;@Katsumata:double].
+
+# Embedding the Mode Calculus in Adjoint Natural Deduction
+
+For a mode judgement $G |- e : \tau{} @@ mu$, we transform $mu => m$ and $t @@ mu => A_m$. Modes:
+
+~ mathpre
+[[@many]] & = U
+[[@once]] & = A
+~
+
+Keep in mind that the submoding relationship is `many < once` in the Mode Calculus,
+but `A < U` in Adjoint Natural Deduction.
+Interpretation of type and mode pairs:
+
+~ mathpre
+[[1 @@ mu]]            & = 1_{[[mu]]}
+[[t1 + t2 @@ mu]]      & = .+\{ @inl : [[t1 @@ mu]], @inr : [[t2 @@ mu]] \}
+[[t1 \times t2 @@ mu]] & = [[t1 @@ mu]] .* [[t2 @@ mu]]
+[[(t1 @@ mu1 -> t2 @@ mu2) @@ mu3]] & = \uparrow^{[[mu3]]}_{\bot} (\downarrow^{[[mu1]]}_{\bot} [[t1 @@ mu1]] -o \downarrow^{[[mu2]]}_{\bot} [[t2 @@ mu2]]) 
+[[\boxempty^M \tau{} @@ mu]] & = \downarrow^{[[@many]]}_{mu} [[ \tau{} @@ @many ]]
+~
+
+The only translation which might be surprising is the one for the arrow type.
+Here, we create the arrow on the side of Adjoint Natural Deduction at the bottom mode $\bot$ (`A` in this case).
+This is maximally restrictive, but we can then upcast the arrow to any mode $mu3$,
+and use arguments and returns of any modes $mu1$ and $mu2$. In particular, these three modes
+are unrelated and no constraints would be generated between them.
+
+We translate contexts by translating the types.
+The contexts of the mode calculus do not contain explicit locks,
+but the locks act as an operation of the context that deletes
+inaccessible variables.
+
+~ mathpre
+[[\cdot]] = \cdot
+[[G, x : \tau{} @@ mu]] = [[G]] , x : [[ \tau{} @@ mu ]]
+~
+
+The translation for introduction terms follows directly from the translation of types above
+(where free variables introduced by the translation are assumed to be fresh):
+
+~ mathpre
+[[()]]           &= ()
+[[x]]            &= @down x
+[[@inl e]]       &= @match [[e]] (@down x => @down (@inl(x)))
+[[@inr e]]       &= @match [[e]] (@down x => @down (@inr(x)))
+[[(e1, e2)]]     &= @match [[e1]] (@down x => @match [[e2]] (@down y => @down (x, y)))
+[[\lambda x. e]] &= @down (@susp (\lambda x. @match x (@down x => [[e]])))
+[[@box_M e]]     &= @match [[e]] (@down x => @down (@down x))
+~
+
+I do not pay special attention to synthesizability in the translation above.
+It may thus be necessary to add extra type annotations into the translated term;
+but this would be straightforward to do. Similarly for eliminations:
+
+~ mathpre
+[[@case e1 @with \{ @inl x => e2; @inr y => e3 \}]] &= @match [[e1]] (@down z =>
+                                                    &\qquad @match z (@inl(x) => [[e2]]; @inr(y) => [[e3]]))
+[[@let (x, y) = e1 @in e2]]                         &= @match [[e1]] (@down z => @match z ((x, y) => [[e2]]))
+[[e1 e2]]                                           &= @match [[e1]] (@down x => (@force x) [[e2]])
+[[@unbox_M e]]                                      &= @match [[e]] (@down x => @match x (@down x => @down x))
+~
+
+Notice that we change the syntax for splitting pairs slightly to avoid considering
+the extra space credit. With this we can prove the following lemma:
+
+~ lemma { caption: "Translation to AND" }
+If $G |- e : \tau{} @@ mu$, then $[[G]] |- [[e]] <=> \downarrow^{mu}_\bot [[\tau{} @@ mu]]$.
+~
+
+# Embedding Adjoint Natural Deduction in the Mode Calculus
+
+Conversely, we can embed Adjoint Natural Deduction in the Mode Calculus.
+
+~ mathpre
+[[U]] & = @many
+[[A]] & = @once
+~
+
+Interpretation of types. For simplicity, we assume that all sums contain only two labels.
+
+~ mathpre
+[[1_m]]                & = 1
+.+\{ @inl : A_m, @inr : B_m \} & = [[A_m]] + [[B_m]]
+[[A_m .* B_m]]         & = [[A_m]] \times [[B_m]]
+(A_m -o B_m)          & = [[A_m]] @@ [[m]] -> [[B_m]] @@ [[m]]
+[[\downarrow^{U}_{m} A_U]] & = \boxempty^M [[A_U]]
+[[\downarrow^{A}_{A} A_A]] & = [[A_A]]
+[[\uparrow^{m}_{k} A_k]] & = 1 @@ @many -> [[A_k]] @@ [[k]]
+~
+
+Notice that in the Mode Calculus there is no box type for `once` variables.
+In particular, while we expect to support mode polymorphism over the modes
+on function arrows in the future, we will not be able to express mode polymorphism over boxes.
+
+Contexts:
+
+~ mathpre
+[[\cdot]] = \cdot
+[[G, x : A_m]] = [[G]] , x : [[ A ]] @@ [[ m ]]
+~
+
+The translation for introduction terms follows directly from the translation of types above
+(where free variables introduced by the translation are assumed to be fresh):
+
+~ mathpre
+[[()]]           &= ()
+[[x]]            &= x
+[[@inl e]]       &= @inl [[e]]
+[[@inr e]]       &= @inr [[e]]
+[[(e1, e2)]]     &= ([[e1]], [[e2]])
+[[\lambda x. e]] &= \lambda x. [[e]]
+[[@down_U e]]    &= @box_M [[e]]
+[[@down_A e]]    &= [[e]]
+[[@susp e]]      &= \lambda x. [[e]]
+~
+
+and similarly for eliminations:
+
+~ mathpre
+[[@match s (@inl(x) => e1; @inr(y) => e2)]] &= @case [[s]] @with \{ @inl x => [[e1]]; @inr y => [[e2]] \}
+[[@match s ((x, y) => e)]]                   &= @let (x, y) = [[s]] @in [[e]]
+[[@match s (@down x => e)]]                  &= @let x = @unbox_M [[s]] @in [[e]]
+[[@match s (() => e)]]                       &= @let x = [[s]] @in [[e]]
+[[@force s]]                                 &= [[s]] ()
+[[s e]]                                      &= [[s]] [[e]]
+~
+
+With this, we can prove the following lemma:
+
+~ lemma { caption: "Translation from AND" }
+If $D |- e <=> A_m$, then $[[D]] |- [[e]] : [[A]] @@ [[m]]$.
+~
+
+# Proofs
+
+~ lemma { caption: "Context splitting" }
+We have $[[G1 + G2]] = [[G1]] ; [[G2]]$.
+~
+~ proof
+By straightforward induction.
+~
+
+~ lemma { caption: "Correctness of the translation" }
+If $G |- e : \tau{} @@ mu$, then $[[G]] |- [[e]] <=> \downarrow^{mu}_\bot [[\tau{} @@ mu]]$.
+~
+~ proof
+By induction over the typing derivation. We re-state the rules of the Mode Calculus with the premises and conclusion
+translated, and then derive the rule in the Adjoint Natural Deduction calculus.
+
+~~ infer
+\quad
+--------------------------[var]
+[[G]], x : [[\tau{} @@ mu]], [[G']] |- @down x <=> \downarrow^{mu}_\bot [[\tau{} @@ mu]]
+~~
+
+By the $[hyp]$ and $[\downarrow I]$ rules.
+Notice that all modes considered here have weakening.
+
+~~ infer
+[[G, \lock_{mu3}]], x : [[t1 @@ mu1]] |- [[e]] <=> \downarrow^{mu2}_\bot [[t2 @@ mu2]] 
+--------------------------------------------------------[lam]
+[[G]] |- @down (@susp (\lambda x. @match x (@down x => [[e]]))) <=> \downarrow^{mu3}_\bot \uparrow^{mu3}_\bot (\downarrow^{mu1}_\bot [[t1 @@ mu1]] -o \downarrow^{mu2}_\bot [[t2 @@ mu2]])
+~~
+
+The $\lock_{mu3}$ operation deletes all variables from $G$ that are at a higher mode than $mu3$.
+Conversely, in the translated version, all variables at a lower mode than $[[mu3]]$ are deleted.
+This allows to use the $[\downarrow I]$ rule.
+We can eliminate the $\downarrow^{mu1}_\bot$ of the argument, since the return value of $[[e]]$ is
+also at the bottom mode. This translation also motivates our choice of the $\lock$ symbol in the
+function abstraction rule: our functions act as IS4 boxes (see Example 8 of @Jang:adjoint).
+
+~~ infer
+[[G1]] |- [[e1]] <=> \downarrow^{mu3}_\bot \uparrow^{mu3}_\bot (\downarrow^{mu1}_\bot [[t1 @@ mu1]] -o \downarrow^{mu2}_\bot [[t2 @@ mu2]]) \quad [[G2]] |- [[e2]] : \downarrow^{mu1}_\bot [[t1 @@ mu1]]
+-----------------------------------------------------------------------------------------------------------[app]
+[[G1]] ; [[G2]] |- @match [[e1]] (@down x => (@force x) [[e2]]) <=> \downarrow^{mu2}_\bot [[t2 @@ mu2]]
+~~
+
+We can eliminate the $\downarrow^{mu3}_\bot$ of the function, since the result is at mode bottom.
+
+~~ infer
+\quad
+--------------------------[unit]
+[[G]] |- () <=> 1_m
+~~
+
+Obvious.
+
+~~ infer
+[[G]] |- [[e]] <=> \downarrow^{mu}_\bot [[t1 @@ mu]]
+---------------------------------------------------[inl]
+[[G]] |- @match [[e]] (@down x => @down (@inl(x))) <=> \downarrow^{mu}_\bot .+{ @inl : [[t1 @@ mu]]; @inr : [[t2 @@ mu]] }
+~~
+
+~~ infer
+[[G]] |- [[e]] <=> \downarrow^{mu}_\bot [[t2 @@ mu]]
+---------------------------------------------------[inr]
+[[G]] |- @match [[e]] (@down x => @down (@inr(x))) <=> \downarrow^{mu}_\bot .+{ @inl : [[t1 @@ mu]]; @inr : [[t2 @@ mu]] }
+~~
+
+~~ infer
+[[G1]] |- [[e1]] <=> \downarrow^{mu}_\bot [[t1 @@ mu]] \quad [[G2]] |- [[e2]] <=> \downarrow^{mu}_\bot [[t2 @@ mu]]
+---------------------------------------------------------------------------------------------------[pair]
+[[G1]] ; [[G2]] |- @match [[e1]] (@down x => @match [[e2]] (@down y => @down (x, y))) \\
+\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad <=> \downarrow^{mu}_\bot [[t1 @@ mu]] .* [[t2 @@ mu]]
+~~
+
+We can eliminate the $\downarrow^{mu}_\bot$ of the argument at mode bottom.
+We can then re-introduce the downarrow since we only use the result at mode $[[mu]]$.
+
+~~ infer
+[[G1]] |- [[e1]] <=> \downarrow^{mu1}_\bot .+{ @inl : [[t1 @@ mu1]]; @inr : [[t2 @@ mu1]]} \\
+[[G2]], x : [[t1 @@ mu1]] |- [[e2]] <=> \downarrow^{mu2}_\bot [[t3 @@ mu2]] \\
+[[G2]], y : [[t2 @@ mu1]] |- [[e3]] <=> \downarrow^{mu2}_\bot [[t3 @@ mu2]]
+------------------------------------------------------------------------------------------------------------------------------[case]
+[[G1]] ; [[G2]] |- @match [[e1]] (@down z => @match z (@inl(x) => [[e2]]; @inr(y) => [[e3]]) <=> \downarrow^{mu2}_\bot [[t3 @@ mu2]]
+~~
+
+~~ infer
+[[G1]] |- [[e1]] <=> \downarrow^{mu1}_\bot ([[t1 @@ mu1]] .* [[t2 @@ mu1]]) \\
+[[G2]], x : [[t1 @@ mu1]], y : [[t2 @@ mu1]] |- [[e2]] <=> \downarrow^{mu2}_\bot [[t3 @@ mu2]]
+-------------------------------------------------------------------------------------------------------------------------------[split]
+[[G1]] ; [[G2]] |- @match [[e1]] (@down z => @match z ((x, y) => [[e2]]) <=> \downarrow^{mu2}_\bot [[t3 @@ mu2]]
+~~
+
+As before, we eliminate the downarrow of the scrutinee.
+This gives us a value (sum or pair) at mode $[[mu1]]$. When matching on this value,
+we need to ensure that every element in the context is larger or equal to $[[mu1]]$,
+but this is clear since we only use the variables $z$ in that context.
+
+~~ infer
+[[G]] |- [[e]] <=> \downarrow^{U}_\bot [[t @@ @many]]
+-----------------------------------------------------[box]
+[[G]] |- @match [[e]] (@down x => @down (@down x)) <=> \downarrow^{mu}_\bot \downarrow^{U}_{mu} [[t @@ @many]]
+~~
+
+We need to split the downshift into two downshifts,
+hence the seemingly redundant elimination and introduction of the downshift.
+This part of the translation shows that the box of the mode calculus
+corresponds to the downshift of Adjoint Natural Deduction.
+
+~~ infer
+[[G]] |- [[e]] <=> \downarrow^{mu}_\bot \downarrow^{U}_{mu} [[t @@ mu]]
+---------------------------------------------------------------[unbox]
+[[G]] |- @match [[e]] (@down x => @match x (@down x => @down x)) <=> \downarrow^{U}_\bot [[t @@ @many]]
+~~
+
+Conversely, in this rule, we have to merge two downshifts into one.
+~
+
+~ texraw
+\noindent\makebox[\linewidth]{\rule{\linewidth}{0.4pt}}
+~
+
+~ lemma { caption: "Translation from AND" }
+If $D |- e <=> A_m$, then $[[D]] |- [[e]] : [[A]] @@ [[m]]$.
+~
+~ proof
+By induction on the typing derivation. We re-state the rules of Adjoint Natural Deduction with
+the premises and conclusion translated, and then derive the rule in the Mode Calculus.
+
+~~ infer
+G = x : [[A]] @@ [[m]]
+--------------------------[hyp]
+[[D_W]] + G |- x : [[A]] @@ [[m]]
+~~
+
+By the $[var]$ rule.
+
+~~ infer
+[[D]], x : [[A]] @@ [[m]] |- [[e]] : [[B]] @@ [[m]] 
+-----------------------------------------------[I]
+[[D]] |- \lambda x. [[e]] : ([[A]] @@ [[m]] -> [[B]] @@ [[m]]) @@ [[m]]
+~~
+
+Since we can assume that $D >= m$ and thus $[[D]] <= [[m]]$,
+we can omit the lock operation on $[[D]]$.
+
+~~ infer
+[[D]] |- [[s]] : ([[A]] @@ [[m]] -> [[B]] @@ [[m]]) @@ [[m]] \quad [[D']] |- [[e]] : [[A]] @@ [[m]]
+---------------------------------------------------------------[E]
+[[D]] + [[D']] |- [[s]] [[e]] : [[B]] @@ [[m]]
+~~
+
+Obvious.
+
+~~ infer
+[[D]] |- [[e]] : [[A]] @@ [[k]]
+-----------------------------------[I]
+[[D]] |- \lambda x. [[e]] : (1 @@ @many -> [[A]] @@ [[k]]) @@ [[m]]
+~~
+
+Since $m >= k$, thus $[[m]] <= [[k]]$. Since we can assume that $D >= m$,
+and thus $[[D]] <= [[m]] <= [[k]]$, we can omit the lock operation on $[[D]]$.
+
+~~ infer
+D' >= m \quad [[D']] |- [[s]] : (1 @@ @many -> [[A]] @@ [[k]]) @@ [[m]]
+---------------------------------------------------------------[E]
+[[D_W]] + [[D']] |- [[s]] () : [[A]] @@ [[k]]
+~~
+
+Obvious. Note that we do not need the side-condition $D' >= m$ directly
+(though it has to be present to maintain the presupposition).
+
+~~ infer
+[[D]] |- [[e1]] : [[A]] @@ [[m]] \quad [[D']] |- [[e2]] : [[B]] @@ [[m]]
+-----------------------------------[I]
+[[D]] + [[D']] |- ([[e1]], [[e2]]) : [[A]] \times [[B]] @@ [[m]]
+~~
+
+~~ infer
+\quad
+--------------------------[1I]
+[[D_W]] |- () : 1 @@ [[m]]
+~~
+
+~~ infer
+[[D]] |- [[e]] : [[A]] @@ [[m]]
+-----------------------------------[I]
+[[D]] |- @inl [[e]] : [[A]] + [[B]] @@ [[m]]
+~~
+
+~~ infer
+[[D]] |- [[e]] : [[A]] @@ [[m]]
+-----------------------------------[I]
+[[D]] |- @inr [[e]] : [[A]] + [[B]] @@ [[m]]
+~~
+
+Obvious.
+
+~~ infer
+[[D]] |- [[s]] : [[A]] \times [[B]] @@ [[m]] \quad D >= m >= r \\
+[[D']], x : [[A]] @@ [[m]], y : [[B]] @@ [[m]] |- [[e']] : [[C]] @@ [[r]]
+---------------------------------------------------------------[E]
+[[D]] + [[D']] |- @let (x, y) = [[s]] @in [[e']] : [[C]] @@ [[r]]
+~~
+
+~~ infer
+[[D]] |- [[s]] : 1 @@ [[m]] \quad D >= m >= r \\
+[[D']] |- [[e']] : [[C]] @@ [[r]]
+---------------------------------------------------------------[1E]
+[[D]] + [[D']] |- @let x = [[s]] @in [[e']] : [[C]] @@ [[r]]
+~~
+
+~~ infer
+[[D]] |- [[s]] : [[A]] + [[B]] @@ [[m]] \quad D >= m >= r \\
+[[D']], x : [[A]] @@ [[m]] |- [[e1]] : [[C]] @@ [[r]] \quad [[D']], y : [[B]] @@ [[m]] |- [[e2]] : [[C]] @@ [[r]]
+---------------------------------------------------------------[E]
+[[D]] + [[D']] |- @case [[s]] (@inl x -> [[e1]]; @inr y -> [[e2]]) : [[C]] @@ [[r]]
+~~
+
+Obvious. Note that we do not need the side-conditions $D >= m >= r$ directly
+(though they have to be present to maintain the presupposition).
+
+~~ infer
+D' >= n \quad [[D']] |- [[e]] : [[A]] @@ @many
+---------------------------------------------------------------[I]
+[[D_W]] + [[D']] |- @box_M [[e]] : \boxempty^M [[A]] @@ [[m]]
+~~
+
+~~ infer
+D' >= @once \quad [[D']] |- [[e]] : [[A]] @@ @once
+---------------------------------------------------------------[I]
+[[D_W]] + [[D']] |- [[e]] : [[A]] @@ @once
+~~
+
+Follows from the $[box]$-rule. The $[sub]$-rule allows us to discard the $[[D_W]]$ context.
+
+~~ infer
+[[D]] |- [[s]] : \boxempty^M [[A]] @@ [[m]] \quad D >= m >= r \\
+[[D']], x : [[A]] @@ @many |- [[e']] : [[C]] @@ [[r]]
+---------------------------------------------------------------[E]
+[[D]] + [[D']] |- @let x = @unbox_M [[s]] in [[e']] : [[C]] @@ [[r]]
+~~
+
+~~ infer
+[[D]] |- [[s]] : [[A]] @@ @once \quad D >= @once \\
+[[D']], x : [[A]] @@ @once |- [[e']] : [[C]] @@ [[r]]
+---------------------------------------------------------------[E]
+[[D]] + [[D']] |- @let x = [[s]] in [[e']] : [[C]] @@ [[r]]
+~~
+
+Obvious.
+~
+
+[BIB]
